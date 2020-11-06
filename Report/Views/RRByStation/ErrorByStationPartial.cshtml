@@ -1,0 +1,75 @@
+﻿@model Report.Entity.RRByDayDataVM
+
+<thead>
+    <tr>
+       
+        <th>Model Name</th>
+        <th>Station</th>
+        @*@foreach (var item in Model)
+            {
+                <th>@(DateTime.ParseExact(item.WORK_DATE, "yyyyMMdd",null).ToString("yyyy/MM/dd"))</th>
+            }*@
+        @foreach (var day in Model.ListDay)
+        {
+            <th>@(DateTime.ParseExact(day, "yyyyMMdd", null).ToString("yyyy/MM/dd"))</th>
+        }
+
+
+    </tr>
+</thead>
+
+
+<tbody>
+
+    @foreach (var item in Model.RRByDay)
+    {
+        <tr>
+            <td rowspan="@(item.DataByDay.Count+1)">@item.MODEL_NAME</td>
+            @foreach (var dts in item.DataByDay)
+            {
+            <tr>
+                <td>@dts.GROUP_NAME</td>
+                @foreach (var dt in dts.DataPerDay)
+                {
+                    if (dt.RETEST_RATE!=-5m)
+                    {
+
+
+                        if (dt.RETEST_RATE > 5)
+                        {
+                            <td style="color:red">@(dt.RETEST_RATE == -5m ? "N/A" : dt.RETEST_RATE.ToString())%</td>
+                        }
+                        else if (dt.RETEST_RATE <= 3)
+                        {
+                            <td style="color:#29c526">@(dt.RETEST_RATE == -5m ? "N/A" : dt.RETEST_RATE.ToString())%</td>
+                        }
+                        else if (dt.RETEST_RATE > 3)
+                        {
+                            <td style="color:#fb7504">@(dt.RETEST_RATE == -5m ? "N/A" : dt.RETEST_RATE.ToString())%</td>
+                        }
+                        else
+                        {
+                            <td>@(dt.RETEST_RATE == -5m ? "N/A" : dt.RETEST_RATE.ToString())%</td>
+                        }
+                    }
+                    else
+                    {
+                        <td style="color:black">@(dt.RETEST_RATE == -5m ? "N/A" : dt.RETEST_RATE.ToString())%</td>
+                    }
+
+                }
+            </tr>
+            }
+
+            </tr>
+    }
+
+</tbody>
+@section HandelPartial{
+    <script>
+    $(document).ready(function ()
+    {
+       
+    })
+</script>
+    }

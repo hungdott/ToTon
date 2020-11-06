@@ -1,0 +1,266 @@
+﻿@model List<Report.Entity.ProjectToDay>
+
+@{
+    ViewBag.Title = "Project Today";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section tableStyle{
+    <link rel="stylesheet" href="~/wwwroot/css/table.css">
+    <style>
+        .tableFixHead {
+            overflow-y: auto;
+            height: 50em;
+        }
+    </style>
+}
+
+@section DownloadTable{
+    <script>
+        function exportData(tableID) {
+
+            //getting values of current time for generating the file name
+            var dt = new Date();
+            var day = dt.getDate();
+            var month = dt.getMonth() + 1;
+            var year = dt.getFullYear();
+            var hour = dt.getHours();
+            var mins = dt.getMinutes();
+            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+            //creating a temporary HTML link element (they support setting file names)
+            var a = document.createElement('a');
+            //getting data from our div that contains the HTML table
+            var data_type = 'data:application/vnd.ms-excel;charset=utf-8';
+            var tableID = `#${tableID}`
+
+            var table_html = $(tableID)[0].outerHTML;
+            //    table_html = table_html.replace(/ /g, '%20');
+            table_html = table_html.replace(/<tfoot[\s\S.]*tfoot>/gmi, '');
+
+            var css_html = '<style>td {border: 0.5pt solid black}';
+            //    css_html = css_html.replace(/ /g, '%20');
+
+            a.href = data_type + ',' + encodeURIComponent('<html><head>' + css_html + '</' + 'head><body>' + table_html + '</body></html>');
+
+            //setting the file name
+            a.download = 'exported_table_' + postfix + '.xls';
+            //triggering the function
+
+            a.click();
+            //just in case, prevent default behaviour
+            e.preventDefault();
+        }
+
+        function loadFixedHeader() {
+            var $th = $('.tableFixHead').find('thead th')
+            $('.tableFixHead').on('scroll', function () {
+                $th.css('transform', 'translateY(' + this.scrollTop + 'px)');
+            });
+        }
+        loadFixedHeader()
+    </script>
+}
+
+@section dateRangeSingle{
+    <script>
+
+        $(function () {
+            $('input[id="testday"]').daterangepicker(
+                {
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    minYear: 1901,
+                    maxYear: parseInt(moment().format("YYYY"), 10),
+                }
+            );
+
+        });
+
+
+
+        $(function () {
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'left'
+            }, function (start, end, label) {
+                debugger
+                console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                var deta = end._d.getDate() - start._d.getDate()
+                var monthStart = start._d.getMonth()
+                var monthEnd = end._d.getMonth()
+                var d=(end-start)/86400000
+
+                 if (d>7) {
+                    toastr["error"]("Mời chọn số ngày nhỏ hơn 7", "Erorr")
+                }
+
+
+            });
+
+        });
+
+
+        $(function () {
+            $('#daterange').data('daterangepicker').setStartDate(moment().add(-5, 'day').format('MM/DD/YYYY'));
+            $('#daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));
+        })
+
+        $('#daterange').daterangepicker();
+
+
+
+
+
+
+
+    </script>
+
+}
+
+@section HandelControl{
+    <script>
+
+        $(function () {
+            $("#loading_result").hide();
+
+        });
+
+        function postdata() {
+            debugger
+
+            //var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            //var toDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+
+            var shift = $("#inputGroupSelect01").find(":selected").val()
+
+            //var optionDay = $("#optionByDay").find(":selected").val()
+            //var model = $("#modelName").find(":selected").val()
+
+
+
+            if (shift.includes('Choose')) {
+                toastr["error"]("Mời chọn ca làm việc", "Erorr")
+                return
+            }
+
+            $("#loading_result").show();
+           // $("#animation_loading").addClass("animation_loading");
+            $("#animation_loading").css("opacity", "0.5");
+
+            var data = new FormData
+
+            data.append('shift', shift)
+
+
+            $.ajax({
+                type: 'post',
+                url: '/ProjectToDay/Filter',
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    debugger
+                    $('#datatable').html(res)
+                    loadFixedHeader()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+        }
+
+
+
+    </script>
+
+}
+@section DatatableCSS{
+    <link href="~/wwwroot/assets/libs/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css">
+    <link href="~/wwwroot/assets/libs/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css">
+    <link href="~/wwwroot/assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css">
+    <link href="~/wwwroot/assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css">
+}
+@section DatatableJs{
+    <!-- Datatable plugin js -->
+    <script src="~/wwwroot/assets/libs/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/wwwroot/assets/libs/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="~/wwwroot/assets/libs/datatables/dataTables.responsive.min.js"></script>
+    <script src="~/wwwroot/assets/libs/datatables/responsive.bootstrap4.min.js"></script>
+    <script src="~/wwwroot/assets/libs/datatables/dataTables.buttons.min.js"></script>
+    <script src="~/wwwroot/assets/libs/datatables/buttons.bootstrap4.min.js"></script>
+    <script src="~/wwwroot/assets/libs/jszip/jszip.min.js"></script>
+    <script src="~/wwwroot/assets/libs/pdfmake/pdfmake.min.js"></script>
+    <script src="~/wwwroot/assets/libs/pdfmake/vfs_fonts.js"></script>
+    <script src="~/wwwroot/assets/libs/datatables/buttons.html5.min.js"></script>
+    <script src="~/wwwroot/assets/libs/datatables/buttons.print.min.js"></script>
+    <script src="~/wwwroot/assets/libs/datatables/dataTables.keyTable.min.js"></script>
+    <script src="~/wwwroot/assets/libs/datatables/dataTables.select.min.js"></script>
+
+    <!-- Datatables init -->
+    <script src="~/wwwroot/assets/js/pages/datatables.init.js"></script>
+}
+
+
+@*<div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark"></h1>
+                </div><!-- /.col -->
+
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>*@
+
+<section class="content">
+    <div id="animation_loading">
+        <div class="container-fluid">
+            <div class="row">
+                <h4 class="header-title">Model run today</h4>
+            </div>
+            <div class="row" style="margin-top:20px;">
+
+                <div class="col-2">
+                    <div class="input-group" style="height:100%">
+                        <div class="input-group-prepend" style="height:40px">
+                            <label class="input-group-text" for="inputGroupSelect01">Shift</label>
+                        </div>
+                        <select class="custom-select" id="inputGroupSelect01" style="width: 205px; height: 40px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;">
+                            <option>Choose...</option>
+                            <option id="AllDay" value="AllDay">All Day</option>
+                            <option selected id="day" value="day">Day shift</option>
+                            <option id="night" value="night">Night shift</option>
+
+                        </select>
+                    </div>
+                </div>
+                <div class="col-1" style="padding-left: 20px; margin-top:2px;">
+                    <button onclick="postdata()" type="button" style=" border-radius:5px;margin-top: -3px;" class="btn btn-success">Filters</button>@*margin-top: -3px; margin-left: -52px;*@
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-12 mt-4">
+                    <div class="card-box">
+
+                        <div class="row justify-content-center mb-5 tableFixHead ">
+                            <table id="datatable" class="table table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+                                @Html.Partial("~/Views/ProjectToDay/ProjectToDayPartial.cshtml", Model)
+                            </table>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+

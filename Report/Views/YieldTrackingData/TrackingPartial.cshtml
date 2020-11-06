@@ -1,0 +1,77 @@
+﻿@model Report.Entity.ListDataVM1
+
+<thead>
+    
+    <tr>
+        <th rowspan="3">Date</th>
+        <th colspan="16">Yield Rate Tracking Data</th>
+    </tr>
+    <tr>
+      
+       <th rowspan="2">Target</th>
+        <th style="text-align:center" colspan="5">FT</th>
+        <th colspan="5">PT</th>
+        <th colspan="5">RC</th>
+    </tr>
+
+    <tr>
+        <th>Input</th>
+        <th>Fail</th>
+        <th>Output</th>
+        <th>First Fail</th>
+        <th>Actual</th>
+        <th>Input</th>
+        <th>Fail</th>
+        <th>Output</th>
+        <th>First Fail</th>
+        <th>Actual</th>
+        <th>Input</th>
+        <th>Fail</th>
+        <th>Output</th>
+        <th>First Fail</th>
+        <th>Actual</th>
+       
+       
+    </tr>
+</thead>
+
+
+<tbody >
+    <tr>
+        @foreach (var item in Model.ListdataStation1)
+        {
+            <tr>
+                <td>@(DateTime.ParseExact(item.date1, "yyyyMMdd", null).ToString("yyyy/MM/dd"))</td>
+                <td>99.05%</td>
+               
+            @foreach (var data in item.dataStation1)
+            {
+               
+                <td border="1" style="text-align:center">@data.INPUT</td>
+                <td >@data.FAIL</td>
+                <td>@data.OUTPUT</td>
+                <td>@data.SUM_FIRST_FAIL</td>
+                <td>@data.ACTUAL%</td>
+            }
+           </tr>
+
+        }
+    </tr>
+    
+</tbody>
+
+
+@section HandelPartial{
+    <script>
+    $(document).ready(function ()
+    {
+
+    })
+    </script>
+}
+
+
+
+
+
+

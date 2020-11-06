@@ -1,0 +1,35 @@
+﻿@model  List<Report.Entity.DataInPutModelNamebyShift>
+
+    <thead>
+        <tr>
+            <th>Model Name</th>
+            <th>Group Name</th>
+            <th>Target</th>
+            <th>InPut</th>
+            <th>Obtain</th>
+            <th>Descript</th>
+        </tr>
+    </thead>
+
+<tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td class="hoverModel" style="cursor:pointer" onclick="ShowChartByModel_Abnormal('@item.ModelName')" rowspan="@(item.LstDataByGroupName.Count()+1)">@item.ModelName</td>
+            @foreach(var gr in item.LstDataByGroupName)
+            {
+                <tr>
+                    <td>@(gr.GroupName)</td>
+                    <td>@(gr.Target)</td>
+                    <td>@(gr.InPut)</td>
+                    <td>@gr.Obtain</td>
+                    <td></td>
+                </tr>
+                
+            }
+        </tr>
+    }
+  
+
+</tbody>
+

@@ -1,0 +1,141 @@
+﻿@model  Report.Entity.M_TopData
+
+<thead>
+    <tr>
+        @*<th width 10%;>Model Name</th>
+            <th>Station</th>
+            <th>Error Code</th>
+            @foreach (var day in Model.days)
+                {
+                <th>@(DateTime.ParseExact(day, "yyyyMMdd", null).ToString("yyyy/MM/dd"))</th>
+            }*@
+
+        <th width="5%">Model Name</th>
+        <th width="5%">Station</th>
+       
+        <th width="5%">InPut Station</th>
+        <th width="5%">RR By Station</th>
+        <th width="5%">YR By Station</th>
+        <th width="5%">First Fail_qty</th>
+        <th width="5%">Second Fail_qty</th>
+        <th>Error Code</th>
+        <th>First Quantity</th>
+        <th>ReFail Quantity</th>
+        <th>PC Name</th>
+        <th>First Fail_QTY</th>
+        <th>ReFail</th>
+        <th>Root cause</th>
+        <th>Action</th>
+        <th>Status</th>
+        <th>Due-date</th>
+        <th>Owner</th>
+        <th>Add</th>
+
+
+
+    </tr>
+</thead>
+
+<tbody>
+
+
+    @foreach (var item in Model.M_listData)
+    {
+
+        var Count_ero = 0;
+        foreach (var c in item.DataByGroupName)
+        {
+            foreach (var ero in c.FailByErrorCode)
+            {
+                Count_ero += ero.count_row_Errorcode;
+            }
+
+        }
+
+        var count_error_in_madel = 0;
+        var xxx = 0;
+        foreach (var c1 in item.DataByGroupName)
+        {
+
+            xxx += c1.count_row_ERR_in_groupName;
+
+          
+            foreach (var ero1 in c1.FailByErrorCode)
+            {
+                count_error_in_madel += ero1.count_row_Errorcode;
+            }
+
+        }
+
+        <tr>
+            @*oki*@
+            @*<td class="model" rowspan="@(Count_ero+1+item.DataByModelName.Count()+item.count_model+count_error_in_madel)">@item.GroupName</td>*@
+
+
+            <td class="model" rowspan="@(Count_ero+item.count_groupName+xxx+1)">@item.ModelName</td>@*oki*@
+
+            @foreach (var mol in item.DataByGroupName)
+
+            {
+
+                var count_m = 0;
+
+                foreach (var count_mol in mol.FailByErrorCode)
+                {
+                    count_m += count_mol.count_row_Errorcode;
+                }
+
+            <tr>
+                <td rowspan="@(count_m+mol.FailByErrorCode.Count()+1)">@mol.GroupName</td>
+                <td rowspan="@(count_m+mol.FailByErrorCode.Count()+1)">@mol.Input</td>
+                <td rowspan="@(count_m+mol.FailByErrorCode.Count()+1)">@(mol.RR)%</td>
+                <td rowspan="@(count_m+mol.FailByErrorCode.Count()+1)">@(mol.YR)%</td>
+                <td rowspan="@(count_m+mol.FailByErrorCode.Count()+1)">@(mol.First_Fail_Of_Model_Name)</td>
+                <td rowspan="@(count_m+mol.FailByErrorCode.Count()+1)">@(mol.Fail_Of_Model_Name)</td>
+
+
+
+                @foreach (var er in mol.FailByErrorCode)
+                {
+                <tr>
+                    <td rowspan="@(er.count_row_Errorcode+1)">@er.ErrorCode</td>
+                    <td rowspan="@(er.count_row_Errorcode+1)">@er.FailQtyErrCode</td>
+                    <td rowspan="@(er.count_row_Errorcode+1)">@er.ReFailQtyErrorcode</td>
+                    @foreach (var data in er.M_FailByMachine)
+                    {
+                    <tr>
+                        <td>@data.PCName</td>
+                        <td>@data.FailQtyPC</td>
+                        <td>@data.ReFail</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><button onclick="addData('@item.ModelName','@mol.GroupName','@er.ErrorCode','@Model.WorkDate')"><i class="far fa-edit"></i></button></td>
+
+                    </tr>
+                    }
+                    </tr>
+                }
+                </tr>
+            }
+
+            </tr>
+
+    }
+
+
+
+
+
+
+
+
+</tbody>
+
+
+
+
+
+

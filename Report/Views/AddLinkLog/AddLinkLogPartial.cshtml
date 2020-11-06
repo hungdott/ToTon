@@ -1,0 +1,54 @@
+﻿@model List<Report.EntityModel.InfoLog>
+
+<thead>
+    <tr>
+        @*<th width 10%;>Model Name</th>
+            <th>Station</th>
+            <th>Error Code</th>
+            @foreach (var day in Model.days)
+                {
+                <th>@(DateTime.ParseExact(day, "yyyyMMdd", null).ToString("yyyy/MM/dd"))</th>
+            }*@
+
+        <th width="25%">Model Name</th>
+        <th width="25%">Station</th>
+        <th width="25%">Link Log</th>
+        <th width="5%">Action</th>
+
+
+
+    </tr>
+</thead>
+
+<tbody id="MyTable">
+   
+
+    @foreach (var item in Model)
+    {
+
+        <tr>
+           
+            <td>@(item.ModelName)</td>
+            <td>@(item.GroupName)</td>
+            <td>@(item.LinkLog)</td>
+            <td><button type="button" style=" border-radius:5px;" class="btn btn-info" onclick="editModel(@item.Id,'@item.ModelName','@item.ModelName','@item.LinkLog')"><i class="far fa-edit" style="margin-right:2px"></i>Edit</button></td>
+        </tr>
+
+
+    }
+  
+
+
+
+
+
+
+
+
+</tbody>
+
+
+
+
+
+

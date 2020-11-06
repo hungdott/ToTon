@@ -1,0 +1,586 @@
+﻿@model  Report.Entity.M_TopData
+@{
+    ViewBag.Title = "RRbyStation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section tableStyle{
+    <link rel="stylesheet" href="~/wwwroot/css/table.css">
+    <style>
+        .tableFixHead {
+            overflow-y: auto;
+            height: 50em;
+        }
+
+        .dropdown.bootstrap-select {
+            border: solid 0.1px #cccfd2;
+        }
+    </style>
+}
+
+@section DownloadTable{
+    <script>
+        function exportData(tableID) {
+
+            //getting values of current time for generating the file name
+            var dt = new Date();
+            var day = dt.getDate();
+            var month = dt.getMonth() + 1;
+            var year = dt.getFullYear();
+            var hour = dt.getHours();
+            var mins = dt.getMinutes();
+            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+            //creating a temporary HTML link element (they support setting file names)
+            var a = document.createElement('a');
+            //getting data from our div that contains the HTML table
+            var data_type = 'data:application/vnd.ms-excel;charset=utf-8';
+            var tableID = `#${tableID}`
+
+            var table_html = $(tableID)[0].outerHTML;
+            //    table_html = table_html.replace(/ /g, '%20');
+            table_html = table_html.replace(/<tfoot[\s\S.]*tfoot>/gmi, '');
+
+            var css_html = '<style>td {border: 0.5pt solid black}';
+            //    css_html = css_html.replace(/ /g, '%20');
+
+            a.href = data_type + ',' + encodeURIComponent('<html><head>' + css_html + '</' + 'head><body>' + table_html + '</body></html>');
+
+            //setting the file name
+            a.download = 'exported_table_' + postfix + '.xls';
+            //triggering the function
+
+            a.click();
+            //just in case, prevent default behaviour
+            e.preventDefault();
+        }
+
+        function loadFixedHeader() {
+            var $th = $('.tableFixHead').find('thead th')
+            $('.tableFixHead').on('scroll', function () {
+                $th.css('transform', 'translateY(' + this.scrollTop + 'px)');
+            });
+        }
+        loadFixedHeader()
+    </script>
+
+
+
+
+}
+
+@section dateRangeSingle{
+    <script>
+        //get data one day
+        $(function () {
+           // debugger
+            $('input[id="testday"]').daterangepicker(
+                {
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    minYear: 1901,
+                    maxYear: parseInt(moment().format("YYYY"), 10),
+                }
+            );
+
+        });
+
+        $(function () {
+            //debugger
+            var d = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+        })
+
+        //=============================================
+        function onApply() {
+            $('input[id="testday"]').on('apply.daterangepicker', function (ev, picker) {
+                var date = picker.startDate.format('MM/DD/YYYY')
+                debugger
+                //====
+                var date11 = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+
+                var NowDate = $("#testday").data('daterangepicker').startDate._d;
+
+                var _nextDate = new Date()
+                _nextDate.setDate(NowDate.getDate() + 1)
+                var sNextDate = _nextDate.getMonth() + 1 + "/" + _nextDate.getDate() + "/" + _nextDate.getFullYear()
+
+                //====
+                var shift = $("#inputGroupSelect01").find(":selected").val()
+
+
+                var data = new FormData
+                data.append('day', date)
+                data.append('Nextday', sNextDate)
+                data.append('shift', shift)
+
+                $("#loading_result").show();
+                // $("#animation_loading").addClass("animation_loading");
+                $("#animation_loading").css("opacity", "0.5");
+                toastr["success"]("Loading Model Name", "Loading")
+                $.ajax({
+                    type: 'post',
+                    url: '/TopErrorByStation/GetStation',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (res) {
+                        debugger
+                        $('#GroupName').html('<option selected>All Station</option>')
+                        $('#GroupName').selectpicker('refresh');
+                        var result = JSON.parse(res)
+                        var a = JSON.parse(res)
+                        var lstmodel = JSON.parse(JSON.parse(res).lstModel)
+                        var lststation = JSON.parse(JSON.parse(res).lstStation)
+                        //groupName
+                        lststation.forEach(function (e) {
+                            debugger
+                            $('#GroupName').append('<option>' + e + '</option>')
+                            $('#GroupName').selectpicker('refresh');
+
+                        })
+
+                        //ModelName
+                        $('#modelName').html('<option selected>All Model</option>')
+                        $('#modelName').selectpicker('refresh');
+                        var iM = 0
+                        lstmodel.forEach(function (e) {
+                            iM++
+                            //$('#modelName').append('<option value="">' + iM + ': ' + e + '</option>')
+                            $('#modelName').append('<option value="' + e + '">' + iM + ': ' + e + '</option>')
+                            $('#modelName').selectpicker('refresh');
+                        })
+                        $("#loading_result").hide();
+                        $("#animation_loading").css("opacity", "1");
+
+                    },
+                    error: function (err) {
+                        toastr["error"]("Not Success", "Erorr")
+                    }
+
+                })
+
+            });
+        }
+        onApply()
+
+        //=============================================
+
+
+
+
+        $(function () {
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'left'
+            }, function (start, end, label) {
+               // debugger
+                console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                var deta = end._d.getDate() - start._d.getDate()
+                var monthStart = start._d.getMonth()
+                var monthEnd = end._d.getMonth()
+                var d=(end-start)/86400000
+
+                 if (d>7) {
+                    toastr["error"]("Mời chọn số ngày nhỏ hơn 7", "Erorr")
+                }
+
+
+            });
+
+        });
+
+
+        $(function () {
+            $('#daterange').data('daterangepicker').setStartDate(moment().add(-5, 'day').format('MM/DD/YYYY'));
+            $('#daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));
+        })
+
+        $('#daterange').daterangepicker();
+
+
+
+        $(function () {
+           // debugger
+            var date = new Date();
+            var Hours_now = date.getHours();
+            if (Hours_now > 7 && Hours_now < 20)
+            {
+                $('#day').attr('selected', 'selected');
+            }
+            else if (Hours_now < 8 || Hours_now > 19)
+            {
+
+                $('#night').attr('selected', 'selected');
+            }
+        });
+
+
+
+    </script>
+
+}
+
+@section HandelControl{
+    <script>
+
+        $(function () {
+            $("#loading_result").hide();
+
+        });
+
+        function postdata() {
+            //debugger
+            //var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            //var toDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+            var shift = $("#inputGroupSelect01").find(":selected").val()
+            //get data one day           
+            debugger
+            var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+            var NowDate = $("#testday").data('daterangepicker').startDate._d;
+            var nextdate = NowDate.getDate() + 1
+
+            //===================
+            var _nextDate = new Date()
+            _nextDate.setDate(NowDate.getDate() + 1)
+
+         
+            var sNextDate = _nextDate.getMonth()+1+ "/" +_nextDate.getDate()+ "/" +_nextDate.getFullYear()
+            //======================
+            //get option
+            //debugger
+            var option = document.getElementById("selectTop3").value
+            var groupName = document.getElementById("GroupName").value
+            var modelName = document.getElementById("modelName").value
+
+            if (option.includes('Choose')) {
+                toastr["error"]("Do you want to chosse All data or top 3", "Erorr")
+                return
+            }
+            $("#loading_result").show();
+           // $("#animation_loading").addClass("animation_loading");
+            $("#animation_loading").css("opacity", "0.5");
+                    
+            var data = new FormData
+            data.append('Date', date)
+            data.append('Option', option)
+            data.append('group_name', groupName)
+            data.append('ModelName', modelName)
+            data.append('Shift', shift)
+            data.append('NextDate', sNextDate)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorCodeByModelName/GetTop3',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (res) {
+                    $('#tblEx').html(res)
+                    loadFixedHeader()
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+        }
+
+    
+
+        function addData(model, station, errorcode,workdate) {
+            $('#model').val(model)
+            $('#station').val(station)
+            $('#errCode').val(errorcode)
+            var getDate = workdate.split(' ')[0]
+         
+                $('#workdate').val(getDate)
+            $('#modalAction').modal("show")
+   
+        }
+        function postFormData()
+        {
+            debugger
+            var model = $('#model').val()
+            var owner = $('#owner').val()
+            var dueDate = $('#dueDate').val()
+            var station = $('#station').val()
+            var action = $('#action').val()
+            var rootCause = $('#rootCause').val()
+            var errCode = $('#errCode').val()
+            var workdate = $('#workdate').val()
+            var status = $('#status').val()
+            
+            var data = new FormData
+            data.append('ModelName', model)
+            data.append('Owner', owner)
+            data.append('Duedate', dueDate) 
+
+            data.append('Station', station)
+            data.append('Action', action)
+            data.append('RootCause', rootCause)
+            data.append('ErrorCode', errCode)
+            data.append('Workdate', workdate)
+            data.append('Status', status)
+
+            $("#loading_result").show();
+            $("#animation_loading").css("opacity", "0.5");
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorCodeByModelName/AddAction',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (res) {
+                    //$('#tblEx').html(res)
+                   // loadFixedHeader()
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+
+        }
+
+
+
+    </script>
+
+}
+
+@section HandelSearch{
+    <script>
+
+    </script>
+}
+<!--Modal: Contact form-->
+<div class="modal fade" id="modalAction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog cascading-modal modal-lg" role="document">
+        <!--Content-->
+        <div class="modal-content">
+
+            <!--Header-->
+            <div class="modal-header light-blue darken-3 white-text">
+                <button type="button" class="close waves-effect waves-light" id="closeModal" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="title"><i class="fa fa-pencil"></i>Action ErrorCode</h4>
+            </div>
+            <!--Body-->
+            <div class="modal-body mb-0">
+                <div class="container">
+                    <div class="row">
+                        <!-- left -->
+                        <div class="col-lg-4">
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="model" class="form-control" value="a">
+                                <label for="model" class="active">Model Name</label>
+                            </div>
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input type="text" id="owner" class="form-control">
+                                <label for="owner" >Owner</label>
+                            </div>
+                        </div>
+                        
+
+                            
+                      
+
+                        <!-- mid -->
+                        <div class="col-lg-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active" ></i>
+                                <input disabled type="text" id="station" class="form-control" value="a">
+                                <label for="station" class="active">Station Name</label>
+                            </div>
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="workdate" class="form-control" value="1999-11-11">
+                                <label for="workdate" class="active">WorkDate</label>
+                            </div>
+                        </div>
+                        
+                        <!-- right -->
+                        <div class="col-lg-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-lock prefix active"></i>
+                                <input disabled type="text" id="errCode" class="form-control" value="a">
+                                <label for="errCode" class="active">ErrorCode</label>
+                            </div>
+                            
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input type="text" id="dueDate" class="form-control" value="1999-11-11">
+                                <label for="dueDate" class="active">DueDate</label>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-lock prefix"></i>
+                                <input type="text" id="status" class="form-control">
+                                <label for="status">Status</label>
+                            </div>
+                          
+                        </div>
+                    </div>
+
+
+                    <div class="row">
+                        <div class="col-lg-11">
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <textarea type="text" id="action" class="form-control" style="resize: none;"></textarea>
+                                <label for="action">Action</label>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-11">
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <textarea type="text" id="rootCause" class="form-control" style="resize: none;"></textarea>
+                                <label for="rootCause">Root Cause</label>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-1-half">
+                    <button class="btn btn-info mb-2" onclick="postFormData()">Send<i class="fa fa-send ml-1"></i></button>
+                </div>
+            </div>
+        </div>
+        <!--/.Content-->
+    </div>
+</div>
+
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">Retest Rate by Station Error Code</h1>
+            </div><!-- /.col -->
+
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+
+<section class="content">
+    <div id="animation_loading">
+        <div class="container-fluid">
+            <div class="row mb-2">
+
+                <div class="col-2" style="padding-left: 0;">
+
+                    <input class="form-control" id="testday" type="text" name="testday" placeholder="Enter test day">
+                </div>
+
+                @*<div class="col-3" style="padding-left: 0;">
+                        <input id="daterange" class="form-control" type="text" name="daterange" />
+                    </div>*@
+
+                <div class="col-2" style="margin-right: 1em;">
+                    <select id="modelName" class="selectpicker" data-hide-disabled="true" data-live-search="true" placeholder="Search..">
+                        <option>All Model</option>
+                        @foreach (var model_name in Model.M_listData)
+                        {
+                            <option>@(model_name.ModelName)</option>
+                        }
+
+                    </select>
+                </div>
+                <div class="col-2" style="margin-right: 1em;">
+                    <select style="width: 205px; height: 31px;border-radius: 5px;" id="GroupName" class="selectpicker" data-hide-disabled="true" data-live-search="true" placeholder="Search..">
+                        <option>All Station</option>
+                        @foreach (var name in Model.M_listData)
+                        {
+                            foreach (var model in name.DataByGroupName)
+                            {
+                                <option>@(model.GroupName)</option>
+                            }
+
+                        }
+
+                    </select>
+                </div>
+
+                <div class="col-2">
+                        <div class="input-group" style="height:100%">
+                            <div class="input-group-prepend" style="height:100%">
+                                <label class="input-group-text" for="inputGroupSelect01">Shift</label>
+                            </div>
+                            <select class="custom-select" id="inputGroupSelect01" style="height:100%">
+                                <option selected>Choose...</option>
+                                <option id="AllDay" value="0">All Day</option>
+                                <option id="day" value="1">Day shift</option>
+                                <option id="night" value="2">Night shift</option>
+                                @*<option id="night_2" value="22">Night shift 2</option>*@
+                            </select>
+                        </div>
+                    </div>
+
+
+                <div class="col-2">
+                    <div class="input-group" style="height:100%">
+                        <div class="input-group-prepend" style="height:100%">
+                            <label class="input-group-text" for="selectTop3">Shift</label>
+                        </div>
+                        <select class="custom-select" id="selectTop3" onchange="getTop3()" style="height:100%">
+                            <option >Choose...</option>
+                            <option selected value="false">All Data</option>
+                            <option value="true">Top 3</option>
+
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-1" style="padding-left: 0; margin-top:2px;">
+                    <button onclick="postdata()" type="button" style=" border-radius:5px;" class="btn btn-success">Filters</button>
+
+                </div>
+                @*<div lass="col-2">*@
+                <div style="width:100px; height:100px;z-index:20 ;position:absolute;margin:100px 500px;" id="loading_result" class="lv-bars lv-mid lg"></div>
+                @*</div>*@
+
+
+
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-4">
+                    <button id="btnFA" onclick="exportData('tblEx')" style="width: 12em;" class="btn btn-primary">
+                        <i class="fas fa-file-download"></i>
+                        Download
+                    </button>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-5 tableFixHead ">
+                <table class="responsive-table" id="tblEx">
+                    @Html.Partial("~/Views/TopErrorCodeByModelName/TopErrorByModelPartial.cshtml", Model)
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+</section>

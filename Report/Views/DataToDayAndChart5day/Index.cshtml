@@ -1,0 +1,592 @@
+﻿@model Report.Entity.LstData
+@{
+    ViewBag.Title = "RRbyStationandChart";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section tableStyle{
+    <link rel="stylesheet" href="~/wwwroot/css/table.css">
+    <style>
+        .tableFixHead {
+            overflow-y: auto;
+            height: 50em;
+             
+        }
+
+        .hideView {
+            visibility: hidden;
+            display: none;
+        }
+
+        .showView {
+            visibility: visible;
+            display: block;
+        }
+    </style>
+}
+
+@section DownloadTable{
+    <script>
+        String.prototype.toDate = function () { //'20200803'.toDate()
+            return new Date(this.substring(0, 4), this.substring(4, 6), this.substring(6, 8))
+        }
+
+
+        function exportData(tableID) {
+
+            //getting values of current time for generating the file name
+            var dt = new Date();
+            var day = dt.getDate();
+            var month = dt.getMonth() + 1;
+            var year = dt.getFullYear();
+            var hour = dt.getHours();
+            var mins = dt.getMinutes();
+            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+            //creating a temporary HTML link element (they support setting file names)
+            var a = document.createElement('a');
+            //getting data from our div that contains the HTML table
+            var data_type = 'data:application/vnd.ms-excel;charset=utf-8';
+            var tableID = `#${tableID}`
+
+            var table_html = $(tableID)[0].outerHTML;
+            //    table_html = table_html.replace(/ /g, '%20');
+            table_html = table_html.replace(/<tfoot[\s\S.]*tfoot>/gmi, '');
+
+            var css_html = '<style>td {border: 0.5pt solid black}';
+            //    css_html = css_html.replace(/ /g, '%20');
+
+            a.href = data_type + ',' + encodeURIComponent('<html><head>' + css_html + '</' + 'head><body>' + table_html + '</body></html>');
+
+            //setting the file name
+            a.download = 'exported_table_' + postfix + '.xls';
+            //triggering the function
+
+            a.click();
+            //just in case, prevent default behaviour
+            e.preventDefault();
+        }
+
+        function loadFixedHeader() {
+            var $th = $('.tableFixHead').find('thead th')
+            $('.tableFixHead').on('scroll', function () {
+                $th.css('transform', 'translateY(' + this.scrollTop + 'px)');
+            });
+        }
+        loadFixedHeader()
+    </script>
+
+
+
+
+}
+
+@section dateRangeSingle{
+    <script>
+
+        $(function () {
+            $('input[id="testday"]').daterangepicker(
+                {
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    minYear: 1901,
+                    maxYear: parseInt(moment().format("YYYY"), 10),
+                }
+            );
+
+        });
+
+
+
+        $(function () {
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'left'
+            }, function (start, end, label) {
+                debugger
+                console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                var deta = end._d.getDate() - start._d.getDate()
+                var monthStart = start._d.getMonth()
+                var monthEnd = end._d.getMonth()
+                var d=(end-start)/86400000
+
+                 if (d>10) {
+                    toastr["error"]("Mời chọn số ngày nhỏ hơn 10", "Erorr")
+                }
+
+
+            });
+
+        });
+
+
+        $(function () {
+            $('#daterange').data('daterangepicker').setStartDate(moment().add(-5, 'day').format('MM/DD/YYYY'));
+            $('#daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));
+        })
+
+        $('#daterange').daterangepicker();
+
+
+
+        $(function () {
+            //debugger
+            var date = new Date();
+            var Hours_now = date.getHours();
+            if (Hours_now > 7 && Hours_now < 20)
+            {
+                $('#day').attr('selected', 'selected');
+            }
+            else if (Hours_now < 8 || Hours_now > 19)
+            {
+
+                $('#night').attr('selected', 'selected');
+            }
+        });
+
+
+
+    </script>
+
+}
+
+@section HandelControl{
+    <script>
+
+        $(function () {
+            $("#loading_result").hide();
+
+        });
+        function showWiew() {
+            
+            $('#wrapTable').removeClass('hideView').addClass('showView');
+            $('#chartRate').removeClass('showView').addClass('hideView');//panel-body
+            location.reload();
+            //$('#chartRate').removeClass('panel-body')
+        }
+        function postdata() {
+            debugger
+
+            var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            var toDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+            var shift = $("#inputGroupSelect01").find(":selected").val()
+            var modelName = $("#modelName").val();
+
+            if (shift.includes('Choose')) {
+                toastr["error"]("Mời chọn ca làm việc", "Erorr")
+                return
+            }
+
+
+            $("#loading_result").show();
+           // $("#animation_loading").addClass("animation_loading");
+            $("#animation_loading").css("opacity", "0.5");
+
+            var data = new FormData
+            data.append('FromDate', startDate)
+            data.append('ToDate', toDate)
+            data.append('ModelName', modelName)
+
+            data.append('Shift', shift)
+            $.ajax({
+                type: 'post',
+                url: '/DataToDayAndChart5day/FilterData',
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    $('#tblEx').html(res)
+                    loadFixedHeader()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+        }
+
+        function toggleDataSeries(e) {
+            if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                e.dataSeries.visible = false;
+            } else {
+                e.dataSeries.visible = true;
+            }
+            e.chart.render();
+        }
+
+        function genRandomColor() {
+
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)]
+
+            }
+            return color;
+        }
+
+        //====================================
+        function DrawOneChart(ModelName, Station, dataOneChart) {
+
+            $(".panel-body").append('<div id="' + (Station) + '"' + ' style="height: 370px; max-width: 920px; margin: 20px auto;"></div>');//
+
+            var chart = new CanvasJS.Chart(Station, {
+                exportEnabled: true,
+                animationEnabled: true,
+                title: {
+                    text: "Station Name: " + ModelName
+                },
+                axisY: {
+                    title: "Retest Rate",
+                    lineColor: "#C24642",
+                    tickColor: "#C24642",//"#C24642"
+                    labelFontColor: "#C24642",
+                    titleFontColor: "#C24642",
+                    suffix: "%"
+                },
+
+                toolTip: {
+                    shared: true
+                },
+                legend: {
+                    cursor: "pointer",
+                    itemclick: toggleDataSeries
+                },
+                data: dataOneChart
+
+            });
+            chart.render();
+        }
+
+
+
+
+        //=================================
+
+        function ShowChart(modelName)//, lstStation   //,lstdataBySation,date
+        {
+
+           // var station = JSON.parse(lstStation)  //mang sation
+            //mang data by station
+            var startDate = $("#daterange").data('daterangepicker').startDate.format('YYYYMMDD')
+            var toDate = $("#daterange").data('daterangepicker').endDate.format('YYYYMMDD')
+            var shift = $("#inputGroupSelect01").find(":selected").val()
+            //var modelName = $("#modelName").val();
+
+            var data = new FormData
+            data.append('fromDate', startDate)
+            data.append('toDate', toDate)
+            data.append('ModelName', modelName)
+            debugger
+
+            $.ajax({
+                type: 'post',
+                url: '/DataToDayAndChart5day/Chart',
+
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (res) {
+                    debugger
+                    
+                    $('#wrapTable').removeClass('showView').addClass('hideView');
+                    $('#chartRate').removeClass('hideView').addClass('showView');                   
+                    debugger
+                   
+                    var a = res;
+                    //=============all chart
+                    var data = [];
+                    a.lstDataByStation.forEach(function (e) {
+                        var gecolor = genRandomColor()
+                        var itemObj = {
+                            type: "line",
+                            color: gecolor,//#369EAD
+                            showInLegend: true,
+                            axisYIndex: 1,
+                        }
+                        itemObj.dataPoints = []
+                        e.lstDataByGroupName.forEach(function (s) {
+                            var item = {}
+
+                            item.x = new Date(s.WORK_DATE.substring(0, 4), (new Number(s.WORK_DATE.substring(4, 6)) - 1).toString(), s.WORK_DATE.substring(6, 8))   //s.WORK_DATE.toDate()         //s.WORK_DATE.toDate()   //prototype.toDate
+                            item.y = s.lstDataBysation[0].RR_s
+                            item.indexLabel = (s.lstDataBysation[0].RR_s).toString()+"%"
+                            itemObj.dataPoints.push(item)
+                        })
+                        itemObj.name = e.GroupName
+                        data.push(itemObj)
+                    })
+
+                    debugger
+
+                    var chart = new CanvasJS.Chart("chartContainer", {
+                        exportEnabled: true,
+                        animationEnabled: true,
+                        title: {
+                            text: "Model Name: " + res.MODEL_NAME
+                        },
+                        axisY: {
+                            title: "Retest Rate",
+                            lineColor: "#C24642",
+                            tickColor: "#C24642",//"#C24642"
+                            labelFontColor: "#C24642",
+                            titleFontColor: "#C24642",
+                            suffix: "%"
+                        },
+
+                        toolTip: {
+                            shared: true
+                        },
+                        legend: {
+                            cursor: "pointer",
+                            itemclick: toggleDataSeries
+                        },
+                        
+                        data: data
+                        //=====
+                        //data: [{
+                        //    type: "line",
+                        //    showInLegend: true,
+                        //    name: "Total Visit",
+                        //    markerType: "square",
+                        //    xValueFormatString: "DD MMM, YYYY",
+                        //    color: "#F08080",
+                        //    dataPoints: [
+                        //        { x: new Date(2017, 0, 3), y: 650, indexLabel: (12).toString() },
+                        //        { x: new Date(2017, 0, 4), y: 700 },
+                        //        { x: new Date(2017, 0, 5), y: 710 },
+                        //        { x: new Date(2017, 0, 6), y: 658 },
+                        //        { x: new Date(2017, 0, 7), y: 734 },
+                        //        { x: new Date(2017, 0, 8), y: 963 },
+                        //        { x: new Date(2017, 0, 9), y: 847 },
+                        //        { x: new Date(2017, 0, 10), y: 853 },
+                        //        { x: new Date(2017, 0, 11), y: 869 },
+                        //        { x: new Date(2017, 0, 12), y: 943 },
+                        //        { x: new Date(2017, 0, 13), y: 970 },
+                        //        { x: new Date(2017, 0, 14), y: 869 },
+                        //        { x: new Date(2017, 0, 15), y: 890 },
+                        //        { x: new Date(2017, 0, 16), y: 930 }
+                        //    ]}]
+
+                        //=====
+                    });
+                   
+                    chart.render();
+
+
+                    //==============
+                    debugger
+                    var  aaa1= [{
+                        type: "line",
+                        name: "Footfall",
+                        color: "#369EAD",
+                        showInLegend: true,
+                        axisYIndex: 1,
+                        dataPoints: [
+                            { x: new Date(2017, 00, 7), y: 85.4 }, 
+                            { x: new Date(2017, 00, 14), y: 92.7 },
+                            { x: new Date(2017, 00, 21), y: 64.9 },
+                            { x: new Date(2017, 00, 28), y: 58.0 },
+                            { x: new Date(2017, 01, 4), y: 63.4 },
+                            { x: new Date(2017, 01, 11), y: 69.9 },
+                            { x: new Date(2017, 01, 18), y: 88.9 },
+                            { x: new Date(2017, 01, 25), y: 66.3 },
+                            { x: new Date(2017, 02, 4), y: 82.7 },
+                            { x: new Date(2017, 02, 11), y: 60.2 },
+                            { x: new Date(2017, 02, 18), y: 87.3 },
+                            { x: new Date(2017, 02, 25), y: 98.5 }
+                        ]
+                    }];
+                    
+                    data.forEach(function (e) {
+                        var gen_color = genRandomColor()
+                        var aaa = [{
+                            type: "line",
+                            name: e.name,
+                            color: gen_color,
+                            showInLegend: true,
+                            axisYIndex: 1,
+                            dataPoints: e.dataPoints
+                        }];
+                       
+                        DrawOneChart(e.name, e.name, aaa)//e.dataPoints
+                    })
+                    //=================one chart==============
+
+
+
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+        }
+
+
+
+
+
+
+    </script>
+
+}
+
+
+<!--Modal: Contact form-->
+<div class="modal fade" id="modalAction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog cascading-modal modal-lg" role="document">
+        <!--Content-->
+        <div class="modal-content">
+
+            <!--Header-->
+            <div class="modal-header light-blue darken-3 white-text">
+                <button type="button" class="close waves-effect waves-light" id="closeModal" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="title"><i class="fa fa-pencil"></i>Chart all station by model name</h4>
+            </div>
+            <!--Body-->
+            <div class="modal-body mb-0">
+                <input type="hidden" id="Id" />
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-5">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="modelName_s" class="form-control" value="a">
+                                <label for="modelName_s" class="active">Model Name</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    @*<div class="row">
+                            <div class="col-lg-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        <canvas id="line-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>*@
+
+
+
+
+                </div>
+
+
+            </div>
+        </div>
+        <!--/.Content-->
+    </div>
+</div>
+
+
+
+
+<!-- and font add-->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">Retest Rate by Station and chart</h1>
+            </div><!-- /.col -->
+
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+
+<section class="content">
+    <div id="animation_loading">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-2" style="padding-left: 0;">
+                    <input id="daterange" class="form-control" type="text" name="daterange" />
+                </div>
+
+                <div class="col-2" style="margin-right: 1em;">
+                    <select id="modelName" class="selectpicker" data-hide-disabled="true" data-live-search="true" placeholder="Search..">
+                        <option>All Model</option>
+                        @foreach (var model_name in Model.lstdataByModel)
+                        {
+                            <option>@(model_name.MODEL_NAME)</option>
+                        }
+
+                    </select>
+                </div>
+
+                <div class="col-2">
+                    <div class="input-group" style="height:100%">
+                        <div class="input-group-prepend" style="height:100%">
+                            <label class="input-group-text" for="inputGroupSelect01">Shift</label>
+                        </div>
+                        <select class="custom-select" id="inputGroupSelect01" style="height:100%">
+                            <option>Choose...</option>
+                            <option selected id="Allday" value="1">All Day</option>
+                            @*<option id="day" value="1">Day shift</option>
+                                <option id="night" value="2">Night shift</option>*@
+
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="col-1" style="padding-left: 0; margin-top:2px;">
+                    <button onclick="postdata()" type="button" style=" border-radius:5px;" class="btn btn-success">Filters</button>
+
+                </div>
+                @*<div lass="col-2">*@
+                <div style="width:100px; height:100px;z-index:20 ;position:absolute;margin:100px 500px;" id="loading_result" class="lv-bars lv-mid lg"></div>
+                @*</div>*@
+
+
+
+            </div>
+
+            @*<div class="row mb-2">
+                    <div class="col-4" style="padding-left: 59em;">
+                        <button id="btnFA" onclick="exportData('tblEx')" style="width: 13em;" class="btn btn-primary">
+                            <i class="fas fa-file-download"></i>
+                            Download
+                        </button>
+                    </div>
+                </div>*@
+            <div class="row justify-content-center mb-5 hideView" id="chartRate">
+                <div class="row">
+                    <div class="col-lg-1">
+                        <button id="backTable" onclick="showWiew()">back to view</button>
+                    </div>
+
+                    <div class="col-lg-11">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div id="chartContainer" style="height: 370px; max-width: 920px; margin: 0px auto;"></div>
+                               
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center mb-5 tableFixHead " id="wrapTable">
+                <table class="responsive-table" id="tblEx">
+                    @Html.Partial("~/Views/DataToDayAndChart5day/DataToDayAndChart5dayPartial.cshtml", Model)
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+</section>
+
+

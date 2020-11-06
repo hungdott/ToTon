@@ -1,0 +1,183 @@
+﻿@model  Report.Entity.TopData
+@using Newtonsoft.Json
+
+
+
+<thead>
+    <tr>
+        @*<th width 10%;>Model Name</th>
+            <th>Station</th>
+            <th>Error Code</th>
+            @foreach (var day in Model.days)
+                {
+                <th>@(DateTime.ParseExact(day, "yyyyMMdd", null).ToString("yyyy/MM/dd"))</th>
+            }*@
+
+
+        <th width="5%">Station</th>
+        <th width="12%">Model Name</th>
+        <th width="5%">InPut Station</th>
+        <th width="5%">RR By Station</th>
+        <th width="5%">YR By Station</th>
+        <th width="5%"> First Fail</th>
+        <th width="5%">Fail QTY</th>
+        <th>Error Code</th>
+        <th width="15%">DES Error Code</th>
+        <th>Quantity</th>
+        <th>ReFail</th>
+        <th width="10%">PC Name</th>
+        <th width="5%">First_Fail</th>
+        <th width="5%">ReFail</th>
+        @*<th width="1%">Root cause</th>
+            <th width="1%">Action</th>
+            <th width="1%">Status</th>
+            <th width="1%">Due-date</th>*@
+        <th width="1%">Owner</th>
+        <th width="1%">View</th>
+        <th>Add</th>
+        @*<th>Edit</th>*@
+
+
+
+
+    </tr>
+</thead>
+
+<tbody>
+
+
+    @foreach (var item in Model.listData)
+    {
+
+        var Count_ero = 0;
+        foreach (var c in item.DataByModelName)
+        {
+            foreach (var ero in c.FailByErrorCode)
+            {
+                Count_ero += ero.count_row_Errorcode;
+            }
+
+        }
+
+        var count_error_in_madel = 0;
+        var xxx = 0;
+        foreach (var c1 in item.DataByModelName)
+        {
+
+            xxx += c1.count_row_ERR_in_model;
+
+            var count_m = 0;
+            foreach (var ero1 in c1.FailByErrorCode)
+            {
+                count_error_in_madel += ero1.count_row_Errorcode;
+            }
+
+        }
+
+        <tr>
+            @*oki*@
+            @*<td class="model" rowspan="@(Count_ero+1+item.DataByModelName.Count()+item.count_model+count_error_in_madel)">@item.GroupName</td>*@
+
+
+            <td class="model" rowspan="@(Count_ero+item.count_model+xxx+1)">@item.GroupName</td>@*oki*@
+
+            @foreach (var mol in item.DataByModelName)
+
+            {
+
+                var count_m = 0;
+
+                foreach (var count_mol in mol.FailByErrorCode)
+                {
+                    count_m += count_mol.count_row_Errorcode;
+                }
+
+            <tr>
+                <td class="hoverModel" style="cursor:pointer" onclick="ShowChartByModel('@item.GroupName','@mol.ModelName')" rowspan="@(count_m+mol.FailByErrorCode.Count+1)">@mol.ModelName</td>
+                <td rowspan="@(count_m+mol.FailByErrorCode.Count+1)">@mol.Input</td>
+
+                @if(mol.RR<=3)
+                {
+                    <td style="color:green; background: #a9f0a9;" rowspan="@(count_m+mol.FailByErrorCode.Count+1)">@(mol.RR)%</td>
+                }
+                else if(mol.RR<=5)
+                {
+                   <td style="color:#fb7504;background: #ecc29e;" rowspan="@(count_m+mol.FailByErrorCode.Count+1)">@(mol.RR)%</td>
+                }
+                else if(mol.RR>5)
+                {
+                    <td style="color:red;background: #f6a7a7;" rowspan="@(count_m+mol.FailByErrorCode.Count+1)">@(mol.RR)%</td>
+                }
+              
+                @if(mol.YR <= 98)
+                {
+                    <td style="color:red;background: #f6a7a7;" rowspan="@(count_m+mol.FailByErrorCode.Count+1)">@(mol.YR)%</td>
+                }
+                else if (mol.YR <= 99)
+                {
+                    <td style="color:#fb7504;background: #ecc29e;" rowspan="@(count_m+mol.FailByErrorCode.Count+1)">@(mol.YR)%</td>
+                }
+                else if (mol.YR <= 100)
+                {
+                    <td style="color:green;background: #a9f0a9;" rowspan="@(count_m+mol.FailByErrorCode.Count+1)">@(mol.YR)%</td>
+                }
+
+                <td rowspan="@(count_m+mol.FailByErrorCode.Count+1)">@(mol.Frist_fail_station)</td>
+                <td rowspan="@(count_m+mol.FailByErrorCode.Count+1)">@(mol.Fail_Of_station_Name)</td>
+
+
+
+                @foreach (var er in mol.FailByErrorCode)
+                {
+                <tr>
+                    <td class="hoverModel" style="cursor:pointer" onclick="ShowMainChartOneByError('@item.GroupName', '@mol.ModelName','@er.ErrorCode')" rowspan="@(er.count_row_Errorcode+1)">@er.ErrorCode</td>
+                    <td rowspan="@(er.count_row_Errorcode+1)">@er.ErrorDESC2</td>
+                    <td rowspan="@(er.count_row_Errorcode+1)">@er.FailQtyErrCode</td>
+                    <td rowspan="@(er.count_row_Errorcode+1)">@er.SecondFailQtyErrCode</td>
+
+                    @foreach (var data in er.FailByMachine)
+                    {
+                    <tr>
+                        <td class="hoverModel" style="cursor:pointer" onclick="ShowMainChartOneByPCName('@item.GroupName', '@mol.ModelName','@data.PCName')">@data.PCName</td>
+                        <td>@data.FailQtyPC</td>
+                        <td>@data.ReFail</td>
+                        <td></td>
+
+                        @if (er.FailByMachine.IndexOf(data) < 1)
+                        {
+                            <td rowspan="@(er.count_row_Errorcode)">
+                                <button onclick="ViewAction('@mol.ModelName','@item.GroupName','@er.ErrorCode','@Model.WorkDate','@data.PCName')">
+                                    <i class="fa fa-info"></i>
+                                </button>
+                            </td>
+
+                            <td rowspan="@(er.count_row_Errorcode)">
+                                <button onclick="addData('@mol.ModelName','@item.GroupName','@er.ErrorCode','@Model.WorkDate','@data.PCName')">
+                                    <i class="far fa-edit"></i>
+                                </button>
+                            </td>
+                        }
+                    </tr>
+                    }
+                    </tr>
+                }
+                </tr>
+            }
+
+            </tr>
+
+    }
+
+
+
+</tbody>
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,99 @@
+﻿@model Report.Entity.ListDataFPY_OPA
+
+<thead>
+
+    <tr>
+        <th rowspan="2">Date</th>
+        <th colspan="6">Test Final Pass Yield Rate(%)</th>
+        <th colspan="4">Retest Rate(%)</th>
+    </tr>
+
+    @*<tr>
+
+        <th rowspan="2">Target</th>
+        <th style="text-align:center" colspan="5">FT</th>
+        <th colspan="5">PT</th>
+        <th colspan="5">RC</th>
+
+    </tr>*@
+
+    <tr>
+        
+        <th>Target</th>
+        <th>Input(PT)</th>
+        <th>FIRST FAIL (PT+FT+RC)</th>
+        <th>FAIL (PT+FT+RC)</th>
+        <th>Output(RC)</th>
+        <th>Actual(PT*FT*RC)</th>
+        <th>Target</th>
+        <th>Rate FT</th>
+        <th>Rate PT</th>
+        <th>Rate RC</th>
+
+
+    </tr>
+  
+</thead>
+
+
+<tbody>
+    <tr>
+        @foreach (var item in Model.Listdata_OBA)
+        {
+           decimal actual=1;
+        <tr>
+            <td>@(DateTime.ParseExact(item.WORK_DATE1, "yyyyMMdd", null).ToString("yyyy/MM/dd"))</td>
+            <td>99.05%</td>
+
+            @foreach (var data in item.DataStation)
+            {
+                if (data.GROUP_NAME == "PT")
+                {
+                    <td border="1" style="text-align:center">@data.INPUT</td>
+                }
+
+                if (data.GROUP_NAME == "RC")
+                {
+                    <td>@data.OUTPUT</td>
+                }
+
+                if (data.GROUP_NAME == "PT")
+                {
+                    <td>@data.SUM_FIRSR_FAIL_ALL</td>
+                    <td>@data.SUM_FAIL_ALL</td>
+                }
+            }
+            
+            @foreach(var data in item.DataStation)
+            {
+                actual *= (data.ACTUAL/100);
+            }
+
+            <td>@(Math.Round(actual*100,2))</td>
+            <td>5.00%</td>
+            @foreach (var data in item.DataStation)
+            {
+                <td>@data.RR%</td>
+            }
+        </tr>
+
+        }
+        </tr>
+
+    </tbody>
+
+
+    @section HandelPartial{
+        <script>
+    $(document).ready(function ()
+    {
+
+    })
+        </script>
+    }
+
+
+
+
+
+

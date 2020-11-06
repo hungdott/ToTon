@@ -1,0 +1,157 @@
+﻿@model  Report.Entity.TopData
+@using Newtonsoft.Json
+
+<thead>
+    <tr>
+      
+        <th width="5%">Station</th>
+        <th width="12%">Model Name</th>
+        <th width="5%">InPut Station</th>
+        <th width="5%">RR By Station</th>
+        <th width="5%">YR By Station</th>
+        <th width="5%"> First Fail</th>
+        <th width="5%">Fail QTY</th>
+        <th>Error Code</th>
+        <th width="15%">DES Error Code</th>
+        <th>Quantity</th>
+        <th>ReFail</th>
+        <th width="1%">View</th>
+        <th width="1%">Add</th>
+        @*<th width="10%">PC Name</th>
+        <th width="5%">First_Fail</th>
+        <th width="5%">ReFail</th>     
+        <th width="1%">Owner</th>
+        <th width="1%">View</th>
+        <th>Add</th>*@
+       
+     
+    </tr>
+</thead>
+
+<tbody>
+
+
+    @foreach (var item in Model.listData)
+    {
+
+        var Count_ero = 0;
+        foreach (var c in item.DataByModelName)
+        {
+            foreach (var ero in c.FailByErrorCode)
+            {
+                Count_ero += ero.count_row_Errorcode;
+            }
+
+        }
+
+        var count_error_in_madel = 0;
+        var xxx = 0;
+        foreach (var c1 in item.DataByModelName)
+        {
+
+            xxx += c1.count_row_ERR_in_model;
+
+            var count_m = 0;
+            foreach (var ero1 in c1.FailByErrorCode)
+            {
+                count_error_in_madel += ero1.count_row_Errorcode;
+            }
+
+        }
+
+        <tr>
+           
+
+            <td class="model" rowspan="@(item.count_model+xxx+1)">@item.GroupName</td>@*oki*@
+
+            @foreach (var mol in item.DataByModelName)
+
+            {
+
+                var count_m = 0;
+
+                foreach (var count_mol in mol.FailByErrorCode)
+                {
+                    count_m += count_mol.count_row_Errorcode;
+                }
+
+            <tr>
+                <td class="hoverModel" style="cursor:pointer" onclick="ShowChartByModel('@item.GroupName','@mol.ModelName')" rowspan="@(mol.FailByErrorCode.Count()+1)">@mol.ModelName</td>
+
+                <td rowspan="@(mol.FailByErrorCode.Count()+1)">@mol.Input</td>
+                @if (mol.RR <= 3)
+                {
+                    <td style="color:green;background: #a9f0a9;" rowspan="@(mol.FailByErrorCode.Count()+1)">@(mol.RR)%</td>
+                }
+                else if (mol.RR <= 5)
+                {
+                    <td style="color:#fb7504;background: #ecc29e;" rowspan="@(mol.FailByErrorCode.Count+1)">@(mol.RR)%</td>
+                }
+                else if (mol.RR > 5)
+                {
+                    <td style="color:red;background: #f6a7a7;" rowspan="@(mol.FailByErrorCode.Count+1)">@(mol.RR)%</td>
+                }
+
+                @if (mol.YR <= 98)
+                {
+                    <td style="color:red;background:#f6a7a7;" rowspan="@(mol.FailByErrorCode.Count+1)">@(mol.YR)%</td> @*# eea5a5*@
+                }
+                else if (mol.YR <= 99)
+                {
+                    <td style="color:#fb7504;background: #ecc29e;" rowspan="@(mol.FailByErrorCode.Count+1)">@(mol.YR)%</td>
+                }
+                else if (mol.YR <= 100)
+                {
+                    <td style="color:green;background:#a9f0a9;" rowspan="@(mol.FailByErrorCode.Count+1)">@(mol.YR)%</td> @*#95de95*@
+                }
+
+               
+                <td rowspan="@(mol.FailByErrorCode.Count()+1)">@(mol.Frist_fail_station)</td>
+                <td rowspan="@(mol.FailByErrorCode.Count()+1)">@(mol.Fail_Of_station_Name)</td>
+
+
+
+                @foreach (var er in mol.FailByErrorCode)
+                {
+                <tr>
+                    <td class="hoverModel" style="cursor:pointer" onclick="ShowMainChartOneByError('@item.GroupName', '@mol.ModelName','@er.ErrorCode')">@er.ErrorCode</td>
+                    <td>@er.ErrorDESC2</td>
+                    <td>@er.FailQtyErrCode</td>
+                    <td>@er.SecondFailQtyErrCode</td>
+                    <td>
+                        <button onclick="ViewAction('@mol.ModelName','@item.GroupName','@er.ErrorCode','@Model.WorkDate','L14B06-FT-01')">
+                            <i class="fa fa-info"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <button onclick="addData('@mol.ModelName','@item.GroupName','@er.ErrorCode','@Model.WorkDate','L14B06-FT-01')">
+                            <i class="far fa-edit"></i>
+                        </button>
+                    </td>
+
+                   
+                 </tr>
+                }
+                </tr>
+            }
+
+            </tr>
+
+    }
+
+
+
+
+
+
+
+
+</tbody>
+
+
+
+
+
+
+
+

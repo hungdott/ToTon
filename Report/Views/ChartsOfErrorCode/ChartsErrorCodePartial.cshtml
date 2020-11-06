@@ -1,0 +1,59 @@
+﻿@model Report.Entity.ErrorCodeVm
+
+
+<thead>
+    <tr>
+        <th style="width:8%;">Model Name</th>
+        <th style="width:8%;">Station</th>
+        <th style="width:8%;">Error Code</th>
+        @foreach (var day in Model.days)
+            {
+            <th>@(DateTime.ParseExact(day, "yyyyMMdd", null).ToString("yyyy/MM/dd"))</th>
+        }
+
+    </tr>
+</thead>
+
+<tbody>
+    @foreach (var item in Model.lstDataByModel)
+    {
+        var x = 0;
+        foreach (var c in item.RateByStation)
+        {
+            x += c.count_row_station;
+        }
+        <tr class="rowModel">
+            <td class="model" rowspan="@(x+1+item.RateByStation.Count)">@item.MODEL_NAME</td>
+            @foreach (var dts in item.RateByStation)
+                {
+            <tr>
+                <td rowspan="@(dts.count_row_station+1)">@dts.GROUP_NAME</td>
+                @foreach (var dt_er in dts.RateByErrCode)
+                    {
+                <tr>
+                    <td>@dt_er.ERROR_CODE</td>
+                    @foreach (var value in dt_er.DataByErrCode)
+                    {
+                        //<td>@value.RATE</td>
+                        //<td>@(value.RATE == -5m ? "N/A" : value.RATE.ToString())%</td>
+                        <td colspan="2">
+                            <canvas id=""></canvas>
+                        </td>
+                    }
+                </tr>
+
+                }
+
+                </tr>
+            }
+
+
+            </tr>
+
+    }
+
+
+
+</tbody>
+
+

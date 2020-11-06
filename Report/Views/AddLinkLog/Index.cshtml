@@ -1,0 +1,275 @@
+﻿@model List<Report.EntityModel.InfoLog>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section tableStyle{
+    <link rel="stylesheet" href="~/wwwroot/css/table.css">
+    <style>
+        .tableFixHead {
+            overflow-y: auto;
+            height: 50em;
+        }
+
+        .dropdown.bootstrap-select {
+            border: solid 0.1px #cccfd2;
+        }
+    </style>
+}
+
+@section DownloadTable{
+    <script>
+       
+    </script>
+
+
+
+
+}
+
+@section dateRangeSingle{
+    <script>
+      
+    </script>
+
+}
+
+@section HandelControl{
+    <script>
+
+        $(function () {
+            $("#loading_result").hide();
+
+        });
+
+        function addData() {
+            $('#Id').val(0)
+            $('#model').val('')
+            $('#station').val('')
+            $('#link').val('')
+            $('#modalAction').modal("show")
+        }
+
+       
+
+
+
+    </script>
+
+}
+
+@section HandelSearch{
+    <script>
+        function addModelLink() {
+            var id =$('#Id').val()
+            var model = $('#model').val()
+            var station = $('#station').val()
+            var link = $('#link').val()
+
+            var data = new FormData
+            data.append('ModelName', model)
+            data.append('Station', station)
+            data.append('LinkLog', link)
+            var linkAj = '/AddLinkLog/AddModelLink';
+            if (parseInt(id) > 0) {
+                data.append('ID', parseInt(id))
+                linkAj = '/AddLinkLog/EditModelLink'
+            }
+            $.ajax({
+                type: 'post',
+                url: linkAj,
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    if (parseInt(id) > 0)
+                    {
+                        toastr["success"]("Edit new model success", "Success")
+                    }
+                    else
+                    {
+                        toastr["success"]("Add model success", "Success")
+                    }
+                   // toastr["success"]("Add new model success", "Success")
+                    $('#tblEx').load('/AddLinkLog/GetAll')
+                    $('#modalAction').modal("hide")
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+        }
+
+
+        function editModel(id, model, station, linkLog) {
+            debugger
+            $('#Id').val(id)
+            $('#model').val(model)
+            $('#station').val(station)
+            $('#link').val(linkLog)
+           
+            $('#modalAction').modal("show")
+
+        }
+
+
+
+
+       
+        debugger
+        //$(document).ready(function () {
+        //    $("#InPut").ojn("keyup", function () {
+        //        var value = $(this).val().toLowerCase();
+        //        $("#MyTable tr").filter(function () {
+        //            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        //        });
+        //    });
+        //});
+
+
+       $(function () {
+           $("#MyInPut").ojn("keyup", function () {
+                var value = $(this).val().toLowerCase();
+                $("#MyTable tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+       });
+
+       $(function () {
+          // alert("hang");
+
+       })
+        
+    </script>
+}
+<!--Modal: Contact form-->
+<div class="modal fade" id="modalAction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog cascading-modal modal-lg" role="document">
+        <!--Content-->
+        <div class="modal-content">
+
+            <!--Header-->
+            <div class="modal-header light-blue darken-3 white-text">
+                <button type="button" class="close waves-effect waves-light" id="closeModal" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="title"><i class="fa fa-pencil"></i>Link By Model</h4>
+            </div>
+            <!--Body-->
+            <div class="modal-body mb-0">
+                <input type="hidden" id="Id" />
+                <div class="container">
+                    <div class="row">
+                        <!-- left -->
+                        <div class="col-lg-5">
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input  type="text" id="model" class="form-control" value="a">
+                                <label for="model" class="active">Model Name</label>
+                            </div>
+                            
+                        </div>
+                        <!-- mid -->
+                        <div class="col-lg-5">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input  type="text" id="station" class="form-control" value="a">
+                                <label for="station" class="active">Station Name</label>
+                            </div>                          
+                        </div>                       
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input type="text" id="link" class="form-control" style="resize: none;" value="a"></input>
+                                <label for="link">Link</label>
+                            </div>
+
+                        </div>
+                    </div>
+                  
+                </div>
+
+                <div class="text-center mt-1-half">
+                    <button class="btn btn-info mb-2" onclick="addModelLink()">Send<i class="fa fa-send ml-1"></i></button>
+                </div>
+            </div>
+        </div>
+        <!--/.Content-->
+    </div>
+</div>
+
+  <!-- and font add-->
+
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">Link Log</h1>
+            </div><!-- /.col -->
+
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+
+<section class="content">
+    <div id="animation_loading">
+        <div class="container-fluid">
+            <div class="row mb-2">
+
+              <div>
+                  <input style="margin-right:20px; margin-top:10px;" value="" id="MyInPut" placeholder="Search..."/>
+              </div>
+
+                @*<div class="col-2" style="margin-right: 1em;">
+                    <select id="modelName" class="selectpicker" data-hide-disabled="true" data-live-search="true" placeholder="Search..">
+                        <option>All Model</option>
+                       
+                    </select>
+                </div>
+                <div class="col-2" style="margin-right: 1em;">
+                    <select style="width: 205px; height: 31px;border-radius: 5px;" id="GroupName" class="selectpicker" data-hide-disabled="true" data-live-search="true" placeholder="Search..">
+                        <option>All Station</option>
+                    </select>
+                </div>*@
+
+                       
+                <div class="col-1" style="padding-left: 0; margin-top:2px;">
+                    <button onclick="" type="button" style=" border-radius:5px;" class="btn btn-success">Filters</button>
+
+                </div>
+                <div class="col-2 mb-2" style="float:right;">
+                    <button onclick="addData()"  type="button" style=" border-radius:5px;" class="btn btn-info"><i class="fa fa-plus" style="margin-right: 2px" ></i> New Model</button>
+                </div>
+                @*<div lass="col-2">*@
+                <div style="width:100px; height:100px;z-index:20 ;position:absolute;margin:100px 500px;" id="loading_result" class="lv-bars lv-mid lg"></div>
+                @*</div>*@
+
+
+
+            </div>
+
+
+            
+            <div class="row justify-content-center mb-5 tableFixHead ">
+                <table class="responsive-table" id="tblEx">
+                    @Html.Partial("~/Views/AddLinkLog/AddLinkLogPartial.cshtml", Model)
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+</section>
+
+
+

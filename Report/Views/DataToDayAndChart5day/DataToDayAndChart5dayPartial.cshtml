@@ -1,0 +1,65 @@
+﻿@model Report.Entity.LstData
+@using Newtonsoft.Json
+<thead>
+    <tr>
+
+        <th>Model Name</th>
+        <th>Station</th>
+        <th>Fail</th>
+        <th>Input</th>
+        <th>First Fail</th>
+        <th>RR</th>
+        <th>YR</th>
+        @*@foreach (var item in Model)
+            {
+                <th>@(DateTime.ParseExact(item.WORK_DATE, "yyyyMMdd",null).ToString("yyyy/MM/dd"))</th>
+            }*@
+     
+
+
+    </tr>
+</thead>
+
+
+<tbody>
+
+    @foreach (var item in Model.lstdataByModel)
+    {
+        <tr>
+            <td style="cursor: pointer;" onclick="ShowChart('@item.MODEL_NAME')" rowspan="@(item.lstDataByStation.Count+1)">@item.MODEL_NAME</td>  @*,'@(JsonConvert.SerializeObject(item.lstDataByStation.Select(x => x.GroupName).ToList()))'*@
+
+            @foreach (var dts in item.lstDataByStation)
+            {
+            <tr>
+                <td>@dts.GroupName</td>
+                @foreach (var dt in dts.lstDataByGroupName)
+                {
+                    foreach(var data in dt.lstDataBysation)
+                    {
+                        
+                            <td>@data.SUM_FAIL</td>
+                            <td>@data.INPUT</td>
+                            <td>@data.FIRST_FAIL</td>                          
+                            <td>@data.RR_s %</td>
+                            <td>@data.YR_s %</td>
+                           
+                           
+                        
+                    }
+                    @*<td>@(dt.WORK_DATE == -5m ? "N/A" : dt.RETEST_RATE.ToString())%</td>*@
+                }
+            </tr>
+            }
+
+            </tr>
+    }
+
+</tbody>
+@section HandelPartial{
+    <script>
+    $(document).ready(function ()
+    {
+
+    })
+    </script>
+}

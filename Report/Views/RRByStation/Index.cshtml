@@ -1,0 +1,314 @@
+﻿@model Report.Entity.RRByDayDataVM
+@{
+    ViewBag.Title = "RRbyStation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section tableStyle{
+    <link rel="stylesheet" href="~/wwwroot/css/table.css">
+    <style>
+        .tableFixHead {
+            overflow-y: auto;
+            height: 50em;
+        }
+    </style>
+}
+
+@section DownloadTable{
+    <script>
+        function exportData(tableID) {
+
+            //getting values of current time for generating the file name
+            var dt = new Date();
+            var day = dt.getDate();
+            var month = dt.getMonth() + 1;
+            var year = dt.getFullYear();
+            var hour = dt.getHours();
+            var mins = dt.getMinutes();
+            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+            //creating a temporary HTML link element (they support setting file names)
+            var a = document.createElement('a');
+            //getting data from our div that contains the HTML table
+            var data_type = 'data:application/vnd.ms-excel;charset=utf-8';
+            var tableID = `#${tableID}`
+
+            var table_html = $(tableID)[0].outerHTML;
+            //    table_html = table_html.replace(/ /g, '%20');
+            table_html = table_html.replace(/<tfoot[\s\S.]*tfoot>/gmi, '');
+
+            var css_html = '<style>td {border: 0.5pt solid black}';
+            //    css_html = css_html.replace(/ /g, '%20');
+
+            a.href = data_type + ',' + encodeURIComponent('<html><head>' + css_html + '</' + 'head><body>' + table_html + '</body></html>');
+
+            //setting the file name
+            a.download = 'exported_table_' + postfix + '.xls';
+            //triggering the function
+
+            a.click();
+            //just in case, prevent default behaviour
+            e.preventDefault();
+        }
+        
+        function loadFixedHeader() {
+            var $th = $('.tableFixHead').find('thead th')
+            $('.tableFixHead').on('scroll', function () {
+                $th.css('transform', 'translateY(' + this.scrollTop + 'px)');
+            });
+        }
+        loadFixedHeader()
+    </script>
+
+    
+        
+   
+}
+
+@section dateRangeSingle{
+    <script>
+        
+        $(function () {
+            $('input[id="testday"]').daterangepicker(
+                {
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    minYear: 1901,
+                    maxYear: parseInt(moment().format("YYYY"), 10),
+                }
+            );
+            
+        });
+
+
+
+        $(function () {
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'left'
+            }, function (start, end, label) {
+                debugger
+                console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                var deta = end._d.getDate() - start._d.getDate()
+                var monthStart = start._d.getMonth()
+                var monthEnd = end._d.getMonth()
+                var d=(end-start)/86400000
+                
+                 if (d>7) {
+                    toastr["error"]("Mời chọn số ngày nhỏ hơn 7", "Erorr")
+                }
+
+               
+            });
+
+        });
+
+
+        $(function () {
+            $('#daterange').data('daterangepicker').setStartDate(moment().add(-5, 'day').format('MM/DD/YYYY'));
+            $('#daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));
+        })
+
+        $('#daterange').daterangepicker();
+        
+       
+
+        //$(function () {
+        //    //debugger
+        //    var date = new Date();
+        //    var Hours_now = date.getHours();
+        //    if (Hours_now > 7 && Hours_now < 20)
+        //    {
+        //        $('#day').attr('selected', 'selected');
+        //    }
+        //    else if (Hours_now < 8 || Hours_now > 19)
+        //    {
+               
+        //        $('#night').attr('selected', 'selected');
+        //    }
+        //});
+       
+
+
+    </script>
+
+}
+
+@section HandelControl{
+    <script>
+
+        $(function () {
+            $("#loading_result").hide();
+
+        });
+
+        function postdata() {
+            //debugger
+
+            var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            var toDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+            var shift = $("#inputGroupSelect01").find(":selected").val()
+            var optionDay = $("#optionByDay").find(":selected").val()
+            var model = $("#modelName").find(":selected").val()
+
+            if (shift.includes('Choose')) {
+                toastr["error"]("Mời chọn ca làm việc", "Erorr")
+                return
+            }
+            
+            $("#loading_result").show();
+           // $("#animation_loading").addClass("animation_loading");
+            $("#animation_loading").css("opacity", "0.5");
+           
+            var data = new FormData
+            data.append('FromDate', startDate)
+            data.append('ToDate', toDate)
+            data.append('Shift', shift)
+            data.append('optionDay', optionDay)
+            data.append('ModelName', model)
+
+            $.ajax({
+                type: 'post',
+                url: '/RRByStation/Filter',
+
+                data: data,
+                contentType: false,
+                processData: false,
+              
+                success: function (res) {
+                    $('#tblEx').html(res)
+                    loadFixedHeader()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+        }
+
+
+        
+    </script>
+    
+    }
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">Retest Rate by Station</h1>
+            </div><!-- /.col -->
+
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+
+<section class="content">
+    <div  id="animation_loading">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div hidden class="col-1" style="padding-left: 0;">
+                    <input id="daterange" class="form-control" type="text" name="daterange" />
+                </div>
+
+                <div class="col-2">
+                    <div class="input-group" style="height:100%">
+                        <div class="input-group-prepend" style="height:100%">
+                            <label class="input-group-text" for="optionByDay">Day</label>
+                        </div>
+                        <select class="custom-select" id="optionByDay" style="height:100%">
+                            <option>Choose...</option>
+                            <option selected id="fiveday" value="fiveDay">7 Day</option>
+                            <option id="today" value="today">ToDay</option>
+                            <option id="yesterday" value="yesterday">Yesterday</option>
+
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="input-group" style="height:100%">
+                        <div class="input-group-prepend" style="height:100%">
+                            <label class="input-group-text" for="inputGroupSelect01">Shift</label>
+                        </div>
+                        <select class="custom-select" id="inputGroupSelect01" style="height:100%">
+                            <option>Choose...</option>
+                            <option selected id="allday" value="3">All Day</option>
+                            <option id="day" value="1">Day shift</option>
+                            <option id="night" value="2">Night shift</option>
+
+                        </select>
+                    </div>
+                </div>
+
+                @*<div class="col-2">
+                    <div class="input-group" style="height:100%">
+                        <div class="input-group-prepend" style="height:100%">
+                            <label class="input-group-text" for="modelName">Model</label>
+                        </div>
+                        <select class="custom-select" id="modelName" style="height:100%">
+                            
+                            <option selected id="allModel">All Model</option>
+                            @foreach(var item in Model.RRByDay)
+                            {
+                                <option>@(item.MODEL_NAME)</option>
+                            }
+
+                        </select>
+                    </div>
+                </div>*@
+
+                <div class="col-2" style="width: 165px;position: relative;left: 24px;">
+                    <select onchange="OnChange()" style="width: 205px; height: 31px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;" id="modelName" class="selectpicker" data-hide-disabled="true" data-live-search="true" placeholder="Search..">
+                        <option selected id="allModel">All Model</option>
+                        @foreach (var item in Model.RRByDay)
+                        {
+                            <option>@(item.MODEL_NAME)</option>
+                        }
+
+                    </select>
+                </div>
+
+
+
+               
+
+
+               
+
+
+                <div class="col-1" style="padding-left: 0; margin-top:2px;">
+                    <button onclick="postdata()" type="button" style=" border-radius:5px;" class="btn btn-success">Filters</button>
+
+                </div>
+                @*<div lass="col-2">*@
+                    <div style="width:100px; height:100px;z-index:20 ;position:absolute;margin:100px 500px;" id="loading_result" class="lv-bars lv-mid lg"></div>
+                @*</div>*@
+
+
+
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-4" style="padding-left: 59em;">
+                    <button id="btnFA" onclick="exportData('tblEx')" style="width: 13em;" class="btn btn-primary">
+                        <i class="fas fa-file-download"></i>
+                        Download
+                    </button>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-5 tableFixHead ">
+                <table class="responsive-table" id="tblEx">
+                    @Html.Partial("~/Views/RRByStation/ErrorByStationPartial.cshtml", Model)
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+</section>
+
+

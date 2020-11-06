@@ -1,0 +1,36 @@
+﻿@model List<Report.Entity.ProjectToDay>
+
+
+
+<thead>
+    <tr>
+       
+        <th >Model Name</th>
+        @*<th>Station</th>*@
+        
+
+    </tr>
+</thead>
+
+<tbody>
+
+      
+        @foreach (var item in Model)
+        {
+            <tr>           
+              
+                <td>@(item.MODEL_NAME)</td>
+               @* <td>@(item.GROUP_NAME)</td>*@
+            </tr>
+
+
+
+        }
+    
+   
+
+
+
+</tbody>
+
+

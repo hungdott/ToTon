@@ -1,0 +1,612 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Report system</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="~/wwwroot/fonts/sanspro.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="~/wwwroot/plugins/fontawesome-free/css/all.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="~/wwwroot/css/ionicons.min.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="~/wwwroot/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="~/wwwroot/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- JQVMap -->
+    <link rel="stylesheet" href="~/wwwroot/plugins/jqvmap/jqvmap.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="~/wwwroot/dist/css/adminlte.min.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="~/wwwroot/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="~/wwwroot/plugins/daterangepicker/daterangepicker.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="~/wwwroot/plugins/summernote/summernote-bs4.min.css">
+    <link rel="stylesheet" href="~/wwwroot/toastr.2.1.1/content/content/toastr.min.css" />
+
+    <!-- select -->
+    <link rel="stylesheet" href="~/wwwroot/dist/css/bootstrap-select.min.css" />
+
+    <!-- Loading -->
+    <link rel="stylesheet" href="~/wwwroot/css/mainLoad.css" />
+
+    <!-- add detail-->
+    <link rel="stylesheet" type="text/css" href="~/wwwroot/css/util.css">
+    <link rel="stylesheet" type="text/css" href="~/wwwroot/css/main.css">
+
+    <!-- MDBootstrap -->
+    @*<link rel="stylesheet" type="text/css" href="~/wwwroot/dist/Mdboostrap/MDB-Free_4.11.0/css/mdb.min.css">*@
+    <link rel="stylesheet" type="text/css" href="~/wwwroot/dist/Mdboostrap/MDB-Free_4.11.0/css/mdb.css">
+    <link rel="stylesheet" type="text/css" href="~/wwwroot/dist/Mdboostrap/MDB-Free_4.11.0/css/style.css">
+
+
+
+    <!--   multiSelect master-->
+    <link rel="stylesheet" type="text/css" href="~/wwwroot/multiselect-master/styles/multiselect.css"/>
+
+
+    <!--   login-->
+    <link rel="stylesheet" type="text/css" href="~/Content/Site.css" />
+    @*<link rel="stylesheet" type="text/css" href="~/Content/bootstrap.css" />*@
+
+
+    <!-- ChartJS -->
+    @*<link rel="stylesheet" type="text/css" href="~/wwwroot/Chart.js/dist/Chart.min.css" />*@
+
+    <!-- CKEditor -->
+    <script src="~/wwwroot/ckeditor5/build/ckeditor.js"></script>
+
+    @RenderSection("DatatableCSS", required: false)
+    @RenderSection("registerCSS", required: false)
+
+
+
+    @RenderSection("tableStyle", required: false)
+    <style>
+        /*body{
+            -moz-transform:scale(0.8,0.8);
+            zoom:0.8;
+            zoom:80%;
+        }*/
+        .red {
+            background: red;
+            color: white;
+        }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+
+
+
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="/Home" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="/Account" class="nav-link">Contact</a>
+                
+                </li>
+                
+                @*<li>@Html.ActionLink("Contact1", "Contact", "Home")</li>  view*@  
+            </ul>
+           
+
+            <!-- SEARCH FORM -->
+            <form class="form-inline ml-3">
+                <div class="input-group input-group-sm">
+                    <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
+                    <div class="input-group-append">
+                        <button class="btn btn-navbar" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <!-- Messages Dropdown Menu -->
+                <!-- Notifications Dropdown Menu -->
+
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
+                        <i class="fas fa-th-large"></i>
+                    </a>
+                </li>
+                @Html.Partial("_LoginPartial")
+            </ul>
+           
+        </nav>
+        <!-- /.navbar -->
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="#" class="brand-link">
+                <img src="~/wwwroot/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+                <span class="brand-text font-weight-light">Report system</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar user panel (optional) -->
+                @*<div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                        <div class="image">
+                            <img src="~/wwwroot/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+                        </div>
+                        <div class="info">
+                            <a href="#" class="d-block">Ludocielf Pierce</a>
+                        </div>
+                    </div>*@
+
+                <!-- SidebarSearch Form -->
+                @*<div class="form-inline">
+                        <div class="input-group" data-widget="sidebar-search">
+                            <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+                            <div class="input-group-append">
+                                <button class="btn btn-sidebar">
+                                    <i class="fas fa-search fa-fw"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>*@
+
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <!-- Add icons to the links using the .nav-icon class
+                             with font-awesome or any other icon font library -->
+                        <li class="nav-header">Report System</li>
+
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-edit"></i>
+                                <p>
+                                    Retest rate
+                                    <i class="fas fa-angle-left right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                               
+
+                                @*<li class="nav-item">
+                                        <a href="/RRByErrorCodeStation" class="nav-link">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Error Code Station Data</p>
+                                        </a>
+                                    </li>*@
+
+                               
+
+                                @*<li class="nav-item">
+                                        <a href="/RRByErrorCodeStation" class="nav-link">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Error Code By Station</p>
+                                        </a>
+                                    </li>*@
+
+                                <li class="nav-item">
+                                    <a href="/TopErrorByStation" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>RR Error Code By Station</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="/TopErrorCodeByModelName" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>RR Error Code By Model Name</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="/DetailReport" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Detail Report</p>
+                                    </a>
+                                </li>
+
+
+                               
+
+                                <li class="nav-item">
+                                    <a href="/Data7dayByModel" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Select Multi 7 day</p>
+                                    </a>
+                                </li>
+
+                              
+
+                                
+
+                                @*<li class="nav-item">
+                                    <a href="/PivotAnalyse" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Pivot Analyse</p>
+                                    </a>
+                                </li>*@
+
+                                <li class="nav-item">
+                                    <a href="/ChartSummary7Day" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Chart Summary 7 day</p>
+                                    </a>
+                                </li>
+                                
+
+                                <li class="nav-item">
+                                    <a href="/Abnormal" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Abnormal and chart</p>
+                                    </a>
+                                </li>
+
+                               
+
+                               
+
+
+                            </ul>
+                        </li>
+
+                    </ul>
+
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <li class="nav-header"> Map Factory </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-edit"></i>
+                                <p>
+                                    Map Factory B06
+                                    <i class="fas fa-angle-left right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/AllLine" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>AllLine</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/FactoryMap" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>1st Floor B06</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="/MapfactorySt2B06" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>2st Floor B06</p>
+                                    </a>
+                                </li>
+
+
+
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <li class="nav-header"> Draw Chart </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-edit"></i>
+                                <p>
+                                    Chart
+                                    <i class="fas fa-angle-left right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/DataToDayAndChart5day" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Data By Sataion and chart</p>
+                                    </a>
+                                </li>
+
+
+
+                            </ul>
+                        </li>
+                    </ul>
+
+
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <li class="nav-header"> Data Config </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-edit"></i>
+                                <p>
+                                    Config
+                                    <i class="fas fa-angle-left right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/AddLinkLog" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Add Link Log</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="/DescriptionErrorCode" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Add Description Error Code</p>
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <li class="nav-header"> Data Today </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-edit"></i>
+                                <p>
+                                    Data Today
+                                    <i class="fas fa-angle-left right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/RRByStation" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>By Station</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="/RRByErrorCode" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>By Error Code</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/YieldTrackingDataFPY_OBA" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Tracking FPY_OBA</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/YieldTrackingData" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Tracking Data</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/PathLossData" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Data Path Loss</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="/ProjectToDay" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Project ToDay</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="/ProjectToDayEri" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Project ToDay Run</p>
+                                    </a>
+                                </li>
+                               
+
+                            </ul>
+                        </li>
+                    </ul>
+
+
+
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <li class="nav-header">Tableau Chart</li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-edit"></i>
+                                <p>
+                                    Tableau Report
+                                    <i class="fas fa-angle-left right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/TableauRRByStation" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Tableau RR By Station</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/TableauRRByErrCode" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Tableau RR By Error Code</p>
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+                    </ul>
+
+
+
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            @RenderBody()
+            <!-- Content Header (Page header) -->
+            <!-- /.content-header -->
+            <!-- Main content -->
+            <!-- /.content -->
+        </div>
+
+
+        <!-- Control Sidebar -->
+        <aside class="control-sidebar control-sidebar-dark">
+            <!-- Control sidebar content goes here -->
+        </aside>
+        <!-- /.control-sidebar -->
+    </div>
+    <!-- ./wrapper -->
+    <!-- jQuery -->
+    <script src="~/wwwroot/plugins/jquery/jquery.min.js"></script>
+    <!-- jQuery UI 1.11.4 -->
+    <script src="~/wwwroot/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+    <!-- Bootstrap 4 -->
+    <script src="~/wwwroot/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- ChartJS -->
+    <script src="~/wwwroot/plugins/chart.js/Chart.min.js"></script>
+    <!-- Sparkline -->
+    <script src="~/wwwroot/plugins/sparklines/sparkline.js"></script>
+    <!-- JQVMap -->
+    <script src="~/wwwroot/plugins/jqvmap/jquery.vmap.min.js"></script>
+    <script src="~/wwwroot/plugins/jqvmap/maps/jquery.vmap.usa.js"></script>
+    <!-- jQuery Knob Chart -->
+    <script src="~/wwwroot/plugins/jquery-knob/jquery.knob.min.js"></script>
+    <!-- daterangepicker -->
+    <script src="~/wwwroot/plugins/moment/moment.min.js"></script>
+    <script src="~/wwwroot/plugins/daterangepicker/daterangepicker.js"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="~/wwwroot/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+    <!-- Summernote -->
+    <script src="~/wwwroot/plugins/summernote/summernote-bs4.min.js"></script>
+    <!-- overlayScrollbars -->
+    <script src="~/wwwroot/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="~/wwwroot/dist/js/adminlte.js"></script>
+    <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
+    <script src="~/wwwroot/dist/js/pages/dashboard.js"></script>
+    <script src="~/wwwroot/toastr.2.1.1/content/scripts/toastr.js"></script>
+
+    <!-- Loading -->
+    <script src="~/wwwroot/js/demo.js"></script>
+    <script src="~/wwwroot/js/main_Load.js"></script>
+
+    <!-- Select -->
+    <script src="~/wwwroot/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/wwwroot/dist/js/bootstrap-select.js"></script>
+
+
+    <!-- MDBootstrap -->
+    <script src="~/wwwroot/dist/Mdboostrap/MDB-Free_4.11.0/js/popper.js"></script>
+    <script src="~/wwwroot/dist/Mdboostrap/MDB-Free_4.11.0/js/mdb.min.js"></script>
+
+    <!-- ChartJS -->
+    @*<script src="~/wwwroot/Chart.js/dist/Chart.bundle.min.js"></script>
+    <script src="~/wwwroot/Chart.js/dist/Chart.min.js"></script>*@
+
+    <!-- CanvasJS -->
+    <script src="~/wwwroot/CanvasJs/canvasjs.min.js"></script>
+    @*<script src="~/wwwroot/CanvasJs/canvasjs.3.js"></script>*@
+
+    <!-- AdminLTE for demo purposes -->
+    <script src="~/wwwroot/dist/js/demo.js"></script>
+
+
+    <!-- MultiSelect Master -->
+    <script src="~/wwwroot/multiselect-master/scripts/multiselect.js"></script>
+
+
+    @RenderSection("DatatableJs",required:false)
+
+    @RenderSection("dateRangeSingle", required: false)
+    @RenderSection("DownloadTable", required: false)
+    @RenderSection("HandelControl", required: false)
+    @RenderSection("HandelPartial", required: false)
+    @RenderSection("TrackingContro", required: false)
+    @RenderSection("HandelSearch", required: false)
+    @RenderSection("HandelChart", required: false)
+    @RenderSection("HandelAddData", required: false)
+    @RenderSection("CkEditor",required:false)
+    @RenderSection("ShowPcName",required:false)
+    @RenderSection("FilterHandelController",required:false)
+    @RenderSection("ScrollMouse",required:false)
+    @RenderSection("DrawChartAbnormal",required:false)
+    @RenderSection("EvenShowTooltip",required:false)
+    @RenderSection("FilterLikeExcel",required:false)
+    @RenderSection("ScriptSelect",required:false)
+    @RenderSection("JSSelectPartial",required:false)
+    @RenderSection("tooltipHoverToShowData",required:false)
+    @RenderSection("Scripts", required: false)
+    
+   
+
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "300",
+            "timeOut": "3000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        }
+
+
+        //$('.nav-link').click(function () {
+        //    $(this).addClass('active');
+        //});
+
+    </script>
+
+    @if (ViewBag.parentMenu != null)
+    {
+        <script>
+            (function () {
+                setTimeout(function () {
+                    $('#@ViewBag.parentMenu').click()
+
+                    $('#@ViewBag.childMenu').addClass('active')
+
+
+                }, 1000)
+
+            })()
+        </script>
+    }
+
+
+    <script>
+        //document.body.style.zoom = "80%"
+    </script>
+
+</body>
+</html>

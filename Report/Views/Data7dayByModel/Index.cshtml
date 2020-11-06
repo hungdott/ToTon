@@ -1,0 +1,701 @@
+﻿@model  Report.Entity.TopData1
+@{
+    ViewBag.Title = "RRbyStation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section tableStyle{
+    <link rel="stylesheet" href="~/wwwroot/css/table.css">
+    <style>
+        button.btn.dropdown-toggle.btn-light {
+            font-size: 1em !important;
+            padding: 0.45em !important;
+        }
+
+        .errorPlaceholder::placeholder {
+            color: red;
+        }
+
+        .tableFixHead {
+            overflow-y: auto;
+            height: 50em;
+        }
+
+        .dropdown.bootstrap-select {
+            border: solid 0.1px #cccfd2;
+        }
+
+        .hideView {
+            visibility: hidden;
+            display: none;
+        }
+
+        .showView {
+            visibility: visible;
+            display: block;
+        }
+
+        .hoverModel:hover {
+            color: #007bff;
+        }
+    </style>
+}
+
+@section ScrollMouse{
+    <script>
+        function ScrollBackToView(id)
+        {
+            $.lockfixed("#id", { offset: { top: 20, bottom: 470 } });
+            //$("div.demo").scrollTop(300);
+        }
+    </script>
+}
+
+@section DownloadTable{
+    <script>
+        function exportData(tableID) {
+
+            //getting values of current time for generating the file name
+            var dt = new Date();
+            var day = dt.getDate();
+            var month = dt.getMonth() + 1;
+            var year = dt.getFullYear();
+            var hour = dt.getHours();
+            var mins = dt.getMinutes();
+            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+            //creating a temporary HTML link element (they support setting file names)
+            var a = document.createElement('a');
+            //getting data from our div that contains the HTML table
+            var data_type = 'data:application/vnd.ms-excel;charset=utf-8';
+            var tableID = `#${tableID}`
+
+            var table_html = $(tableID)[0].outerHTML;
+            //    table_html = table_html.replace(/ /g, '%20');
+            table_html = table_html.replace(/<tfoot[\s\S.]*tfoot>/gmi, '');
+
+            var css_html = '<style>td {border: 0.5pt solid black}';
+            //    css_html = css_html.replace(/ /g, '%20');
+
+            a.href = data_type + ',' + encodeURIComponent('<html><head>' + css_html + '</' + 'head><body>' + table_html + '</body></html>');
+
+            //setting the file name
+            a.download = 'exported_table_' + postfix + '.xls';
+            //triggering the function
+
+            a.click();
+            //just in case, prevent default behaviour
+            e.preventDefault();
+        }
+
+        function loadFixedHeader() {
+            var $th = $('.tableFixHead').find('thead th')
+            $('.tableFixHead').on('scroll', function () {
+                $th.css('transform', 'translateY(' + this.scrollTop + 'px)');
+            });
+        }
+        loadFixedHeader()
+    </script>
+}
+
+@section dateRangeSingle{
+    <script>
+
+        //get data one day
+        $(function () {
+            // debugger
+            $('input[id="testday"]').daterangepicker(
+                {
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    minYear: 1901,
+                    maxYear: parseInt(moment().format("YYYY"), 10),
+                }
+            );
+
+        });
+
+        $(function () {
+            $('#daterange').data('daterangepicker').setStartDate(moment().add(-7, 'day').format('MM/DD/YYYY'));
+            $('#daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));
+        })
+
+        $('#daterange').daterangepicker();
+
+       
+
+        function onApply() {
+            $('input[id="testday"]').on('apply.daterangepicker', function (ev, picker) {
+                var date = picker.startDate.format('MM/DD/YYYY')
+                debugger
+                //====
+                var date11 = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+
+                var NowDate = $("#testday").data('daterangepicker').startDate._d;
+
+                var _nextDate = new Date()
+                _nextDate.setDate(NowDate.getDate() + 1)
+                var sNextDate = _nextDate.getMonth() + 1 + "/" + _nextDate.getDate() + "/" + _nextDate.getFullYear()
+
+                //====
+                var shift = $("#inputGroupSelect01").find(":selected").val()
+
+
+                var data = new FormData
+                data.append('day', date)
+                data.append('Nextday', sNextDate)
+                data.append('shift', shift)
+
+                $("#loading_result").show();
+                // $("#animation_loading").addClass("animation_loading");
+                $("#animation_loading").css("opacity", "0.5");
+                toastr["success"]("Loading Model Name", "Loading")
+                $.ajax({
+                    type: 'post',
+                    url: '/TopErrorByStation/GetStation',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (res) {
+                        debugger
+                        $('#GroupName').html('<option selected>All Station</option>')
+                        $('#GroupName').selectpicker('refresh');
+                        var result = JSON.parse(res)
+                        var a = JSON.parse(res)
+                        var lstmodel = JSON.parse(JSON.parse(res).lstModel)
+                        var lststation = JSON.parse(JSON.parse(res).lstStation)
+                        //groupName
+                        lststation.forEach(function (e) {
+                            $('#GroupName').append('<option>' + e + '</option>')
+                            $('#GroupName').selectpicker('refresh');
+
+                        })
+
+                        //ModelName
+                        $('#modelName').html('<option selected>All Model</option>')
+                        $('#modelName').selectpicker('refresh');
+                        var iM=0
+                        lstmodel.forEach(function (e) {
+                            iM++
+                            //$('#modelName').append('<option value="">' + iM + ': ' + e + '</option>')
+                            $('#modelName').append('<option value="'+e+'">' + iM + ': ' + e + '</option>')
+                            $('#modelName').selectpicker('refresh');
+                        })
+
+                        $("#loading_result").hide();
+                        $("#animation_loading").css("opacity", "1");
+
+                    },
+                    error: function (err) {
+                        toastr["error"]("Not Success", "Erorr")
+                    }
+
+                })
+
+            });
+        }
+        onApply()
+
+        //=============================================
+
+        function OnChange() {
+            debugger
+
+            var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+
+            var NowDate = $("#testday").data('daterangepicker').startDate._d;
+
+            var _nextDate = new Date()
+            _nextDate.setDate(NowDate.getDate() + 1)
+            var sNextDate = _nextDate.getMonth() + 1 + "/" + _nextDate.getDate() + "/" + _nextDate.getFullYear()
+
+                //var date = picker.startDate.format('MM/DD/YYYY')
+            //var Station = document.getElementById("GroupName").value
+                var Station = $("#GroupName").val().toString()
+                var data = new FormData
+                data.append('day', date)
+                data.append('nextDate', sNextDate)
+                data.append('station',Station)
+                $.ajax({
+                    type: 'post',
+                    url: '/TopErrorByStation/GetModel',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (res) {
+                        debugger
+                        $('#modelName').html('<option selected>All Model</option>')
+                        $('#modelName').selectpicker('refresh');
+                        var result = JSON.parse(res)
+                        result.forEach(function (e) {
+                            $('#modelName').append('<option>' + e + '</option>')
+                            $('#modelName').selectpicker('refresh');
+
+                        })
+
+                    },
+                    error: function (err) {
+                        toastr["error"]("Not Success", "Erorr")
+                    }
+
+                })
+
+
+        }
+
+        OnChange()
+        //================================================
+      
+        $(function () {
+            $('#daterange').data('daterangepicker').setStartDate(moment().add(-5, 'day').format('MM/DD/YYYY'));
+            $('#daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));
+        })
+
+        $('#daterange').daterangepicker();
+
+        $(function () {
+            // debugger
+            var date = new Date();
+            var Hours_now = date.getHours();
+            if (Hours_now > 7 && Hours_now < 20) {
+                $('#day').attr('selected', 'selected');
+            }
+            else if (Hours_now < 8 || Hours_now > 19) {
+
+                $('#night').attr('selected', 'selected');
+            }
+        });
+    </script>
+
+}
+
+
+
+@section HandelControl{
+    <script>
+
+        $(function () {
+            $("#loading_result").hide();
+
+        });
+
+        function showWiew() {
+            $('#tblEx').removeClass('hideView').addClass('showView');
+            $('#header_choose').removeClass('hideView').addClass('showView');
+
+            $('#ShowChartByPcname').removeClass('showView').addClass('hideView');
+            $('#modalAction').modal("show")
+            // location.reload();
+        }
+
+        function showWiewAndHideMes() {
+            $('#tblEx').removeClass('hideView').addClass('showView');
+            $('#header_choose').removeClass('hideView').addClass('showView');
+
+            $('#ShowChartByPcname').removeClass('showView').addClass('hideView');
+
+
+
+
+        }
+        function showViewAction() {
+            $('#tblEx').removeClass('hideView').addClass('showView');
+            $('#header_choose').removeClass('hideView').addClass('showView');
+
+            $('#ShowChartByPcname').removeClass('showView').addClass('hideView');
+        }
+
+
+        function showWiewChartSummary() {
+            $('#ShowChartByPcname').removeClass('showView').addClass('hideView');
+            $('#tblEx').removeClass('hideView').addClass('showView');
+
+        }
+
+
+        function postdata() {
+            debugger
+            var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            var toDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+
+            var fromDate=startDate.substring(6,10)+startDate.substring(0,2)+startDate.substring(3,5)
+            var toDate = toDate.substring(6, 10) + toDate.substring(0, 2) + toDate.substring(3, 5)
+                  //get option
+
+            var option = document.getElementById("selectTop3").value
+          
+
+            var groupName = $("#GroupName").val().toString()
+            debugger
+            var modelName = $("#modelName").val().toString()
+
+        
+            var pcs = document.getElementById("PCSByStation").value
+            $("#loading_result").show();
+            // $("#animation_loading").addClass("animation_loading");
+            toastr["success"]("Loading Data", "Loading")
+            $("#animation_loading").css("opacity", "0.5");
+
+            debugger
+            var data = new FormData
+            data.append('FromDate', fromDate)
+            data.append('ToDate', toDate)
+
+            data.append('Option', option)
+            data.append('group_name', groupName)
+            data.append('ModelName', modelName)         
+            data.append('PCS', pcs)
+          
+
+
+            $.ajax({
+                type: 'post',
+                url: '/Data7dayByModel/DataFlter',
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+
+                    $('#tblEx').html(res)
+                    loadFixedHeader()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+        }
+
+
+        function postdataToFind()
+        {
+            debugger
+            $("#loading_result").show();
+            $("#animation_loading").css("opacity", "0.5");
+            var modelName = document.getElementById("modelNameFind").value
+            var data = new FormData
+            data.append('Model_name', modelName)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/findDateLaster',
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    debugger
+                    $('#tblEx').html(res)
+                    loadFixedHeader()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+
+
+        }
+
+       
+   </script>
+
+}
+
+
+
+
+
+
+
+@section ShowPcName{
+    <script>
+
+         function showAndHidePC()
+         {
+             var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+             var NowDate = $("#testday").data('daterangepicker').startDate._d;
+
+             var _nextDate = new Date()
+             _nextDate.setDate(NowDate.getDate() + 1)
+             var sNextDate = _nextDate.getMonth() + 1 + "/" + _nextDate.getDate() + "/" + _nextDate.getFullYear()
+             var option = document.getElementById("selectTop3").value
+             var groupName = document.getElementById("GroupName").value
+             var modelName = document.getElementById("modelName").value
+             var shift = $("#inputGroupSelect01").find(":selected").val()
+             var pcs = document.getElementById("PCSByStation").value
+             var fromHour = document.getElementById("FromHour").value;
+             var ToHour = document.getElementById("ToHour").value;
+             var optionLine = document.getElementById("LineChange").value
+             var statusPc = document.getElementById("StatusPcName").value;
+
+
+
+             $("#loading_result").show();
+             toastr["success"]("Loading Data", "Loading")
+             $("#animation_loading").css("opacity", "0.5");
+
+             debugger
+             var data = new FormData
+             data.append('Date', date)
+             data.append('Option', option)
+             data.append('group_name', groupName)
+             data.append('ModelName', modelName)
+             data.append('Shift', shift)
+             data.append('NextDate', sNextDate)
+             data.append('PCS', pcs)
+             data.append('fromHour', fromHour)
+             data.append('toHour', ToHour)
+             data.append('StatusLine', optionLine)
+             data.append('StatusPc', statusPc)
+
+             //$("#loading_result").show();
+             //$("#animation_loading").css("opacity", "0.5");
+             //toastr["success"]("Loading data11", "Loading")
+
+             $.ajax({
+                 type: 'post',
+                 url: '/TopErrorByStation/statusPcName',
+                 data: data,
+                 contentType: false,
+                 processData: false,
+                 success: function (res) {
+                     debugger
+                     $('#tblEx').html(res)
+                     $("#loading_result").hide();
+                     $("#animation_loading").css("opacity", "1");
+                 },
+                 error: function (err) {
+                     toastr["error"]("Not Success", "Erorr")
+                 }
+
+             })
+         }
+
+
+    </script>
+
+}
+
+
+
+
+
+
+
+
+
+
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-12">
+                <h1 style="text-align:center" class="m-0 text-dark">Retest Rate by Station 7 day</h1>
+            </div><!-- /.col -->
+
+        </div><!-- /.row -->
+
+        <hr style="margin-bottom:20px;" />
+    </div><!-- /.container-fluid -->
+</div>
+
+<section class="content">
+    <div id="animation_loading">
+        <div class="container-fluid">
+            <div id="header_choose">
+                <div style="height:50px;" class="row mb-2">
+
+                  
+
+                    <div class="col-1" style="padding-left: 0;">
+                        <input style="height:35px;" id="daterange" class="form-control" type="text" name="daterange" />
+                    </div>
+
+
+
+                    @*<div class="col-3" style="padding-left: 0;">
+                            <input id="daterange" class="form-control" type="text" name="daterange" />
+                        </div>*@
+
+                    <div class="col-2" style="width: 165px;position:relative; left: 6px;">
+                        <select onchange="OnChange()" style="width: 205px; height: 31px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;" id="GroupName" class="selectpicker form-control" data-hide-disabled="true" data-live-search="true" multiple data-actions-box="true" placeholder="Search..">
+
+                            <option selected>All Station</option>
+                            @foreach (var name in Model.listData)
+                            {
+                                <option style="font-weight:bold; color:black; font-size:16px;">@(name.GroupName)</option>
+                            }
+
+                        </select>
+                    </div>
+
+                    <div class="col-2">
+                        <select style=" width:205px; height: 31px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;" id="modelName" class="selectpicker form-control" data-hide-disabled="true" data-container="body" data-virtual-scroll="false" data-live-search="true" multiple data-actions-box="true" placeholder="Search..">
+                            <option style=" height: 40px;" selected>All Model</option>
+                            @if (ViewBag.lstmodel != null && ViewBag.lstmodel.Count > 0)
+                            {
+                                foreach (var item in ViewBag.lstmodel)
+                                {
+                                    <option style="font-weight:bold; color:black; font-size:16px;">@(item)</option>
+
+                                }
+                            }
+
+                            @* <option>@(model.ModelName)</option>*@
+
+                        </select>
+                    </div>
+
+
+
+                  
+
+
+                    <div class="col-2">
+                        <div class="input-group" style="height:100%">
+                            <div class="input-group-prepend" style="height:40px">
+                                <label class="input-group-text" for="selectTop3">Data</label>
+                            </div>
+                            <select class="custom-select" id="selectTop3" onchange="getTop3()" style="width: 205px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                <option>Choose...</option>
+                                <option selected value="all">All Data</option>
+                                <option value="top3Er">Top 3 Error code</option>
+                                <option value="top3Mo">Top 3 Model Name</option>
+                                <option value="topMoER">Top 3 ModelName && Errocode</option>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-2">
+                        <div class="input-group" style="height:100%;width:60%">
+                            <div class="input-group-prepend" style="height:100%">
+                                <label style="height:40px;" class="input-group-text" for="selectTop3">Input</label>
+                                @*<input style="width: 150px; height: 40px;border-radius: 5px;" id="PCSByStation" type="text" value="100" />*@
+                                <select id="PCSByStation" class="custom-select" style="width: 150px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                    <option selected>0</option>
+                                    <option>10</option>
+                                    @for (var ip = 0; ip < 1000; ip += 50)
+                                    {
+                                        <option>@ip</option>
+                                    }
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+
+
+                    <div class="col-1" style="padding-left: 0; margin-top:2px;">
+                        <button onclick="postdata()" type="button" style=" border-radius:5px;margin-top: -3px; margin-left: -52px;height:40px; line-height:14px;" class="btn btn-success">Filters</button>@*margin-top: -3px; margin-left: -52px;*@
+
+                    </div>
+                    @*<div lass="col-2">*@
+                    <div style="width:100px; height:100px;z-index:20 ;position:absolute;margin:100px 500px;" id="loading_result" class="lv-bars lv-mid lg"></div>
+                    @*</div>*@
+
+
+
+                </div>
+
+                <div style="margin-top:20px;" class="row mb-2">
+                   
+
+                    
+
+                 
+                   
+
+                  
+
+                   
+
+                    <div class="col-1">
+                        <button id="btnFA" onclick="exportData('tblEx')" style="width: 14em; margin-top: 0px;margin-left:306px;" class="btn btn-primary">
+
+                            <i class="fas fa-file-download"></i>
+                            Download
+                        </button>
+                    </div>
+
+
+
+                    <div class="col-1">
+                        <div class="input-group" style="height:100%;">
+                            <div class="input-group-prepend" style="height:40px;margin-left:-70px;">
+                                <label class="input-group-text" for="StatusPcName">PCName</label>
+                            </div>
+                            <select onchange="showAndHidePC()" class="custom-select" id="StatusPcName" style="width: 205px; height: 40px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;">
+                                <option selected value="">Choose</option>
+                                <option value="ShowPc">Show Pc</option>
+                                <option value="HidePc">Hide Pc</option>
+                            </select>
+                        </div>
+                    </div>
+
+
+
+
+                </div>
+
+               
+
+            </div>
+
+
+
+            <div class="row justify-content-center mb-5 hideView" id="ShowChartByPcname">
+                <div id="lineBtn" class="row">
+                    <div class="col-lg-1">
+                        <button class="btn-blue" style="padding:8px; border-radius:8px;width:106px;" id="backTable" onclick="showWiew()">back to view</button>
+                    </div>
+
+                 
+
+                </div>
+                <div style="width:100%">
+                    <div id="ChartbyPcNameShowhide" class="col-lg-12">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div class="col-lg-1">
+                                    <button class="btn-blue" style="padding:8px; border-radius:8px;" id="backTable11111" onclick="showWiew()">back to view sadasdsa</button>
+                                </div>
+                                @*<div id="chartContainer" style="height: 370px; max-width: 920px; margin: 0px auto;"></div>*@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <hr style="margin-bottom:20px;" />
+
+
+            <div class="row justify-content-center mb-5 tableFixHead ">
+                <table class="responsive-table" id="tblEx">
+                    @Html.Partial("~/Views/Data7dayByModel/Data7DayByStationHidePCPartial.cshtml", Model)
+                    
+                </table>
+            </div>
+
+
+
+
+
+
+        </div>
+    </div>
+</section>

@@ -1,0 +1,204 @@
+﻿@model Report.Entity.Data_Error
+    @*@model Report.Entity.DataErrorCode*@
+
+
+@{
+    ViewBag.Title = "RRByErrorCodeByStation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section tableStyle{
+    <link rel="stylesheet" href="~/wwwroot/css/table.css">
+    <style>
+        .tableFixHead {
+            overflow-y: auto;
+            height: 50em;
+        }
+    </style>
+}
+
+@section DownloadTable{
+    <script>
+        function exportData(tableID) {
+
+            //getting values of current time for generating the file name
+            var dt = new Date();
+            var day = dt.getDate();
+            var month = dt.getMonth() + 1;
+            var year = dt.getFullYear();
+            var hour = dt.getHours();
+            var mins = dt.getMinutes();
+            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+            //creating a temporary HTML link element (they support setting file names)
+            var a = document.createElement('a');
+            //getting data from our div that contains the HTML table
+            var data_type = 'data:application/vnd.ms-excel;charset=utf-8';
+            var tableID = `#${tableID}`
+
+            var table_html = $(tableID)[0].outerHTML;
+            //    table_html = table_html.replace(/ /g, '%20');
+            table_html = table_html.replace(/<tfoot[\s\S.]*tfoot>/gmi, '');
+
+            var css_html = '<style>td {border: 0.5pt solid black}';
+            //    css_html = css_html.replace(/ /g, '%20');
+
+            a.href = data_type + ',' + encodeURIComponent('<html><head>' + css_html + '</' + 'head><body>' + table_html + '</body></html>');
+
+            //setting the file name
+            a.download = 'exported_table_' + postfix + '.xls';
+            //triggering the function
+
+            a.click();
+            //just in case, prevent default behaviour
+            e.preventDefault();
+        }
+        var $th = $('.tableFixHead').find('thead th')
+        $('.tableFixHead').on('scroll', function () {
+            $th.css('transform', 'translateY(' + this.scrollTop + 'px)');
+        });
+
+       
+    </script>
+
+}
+
+@section dateRangeSingle{
+    <script>
+      
+        $(function () {
+            $('input[id="testday"]').daterangepicker(
+                {
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    minYear: 1901,
+                    maxYear: parseInt(moment().format("YYYY"), 10),
+                }
+            );
+        });
+
+
+    </script>
+
+}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">Retest Rate by Station</h1>
+            </div><!-- /.col -->
+
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-3" style="padding-left: 0;">
+                <input class="form-control" id="testday" type="text" name="testday" placeholder="Enter test day">
+            </div>
+            <div class="col-4">
+                <div class="input-group" style="height:100%">
+                    <div class="input-group-prepend" style="height:100%">
+                        <label class="input-group-text" for="inputGroupSelect01">Shift</label>
+                    </div>
+                    <select class="custom-select" id="inputGroupSelect01" style="height:100%">
+                        <option selected>Choose...</option>
+                        <option value="1">Day shift</option>
+                        <option value="2">Night shift</option>
+
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-4" style="padding-left: 65em;">
+                <button id="btnFA" onclick="exportData('tblEx')" class="btn btn-primary">
+                    <i class="fas fa-file-download"></i>
+                    Download
+                </button>
+            </div>
+        </div>
+        <div class="row justify-content-center mb-5 tableFixHead ">
+            <table class="responsive-table" id="tblEx">
+
+                <thead>
+                    <tr>
+                        <th>Model Name</th>
+                        <th>Station</th>
+                        <th>Error Code</th>
+                        @foreach (var day in Model.ListDay)
+                        {
+                            <th>@(DateTime.ParseExact(day, "yyyyMMdd", null).ToString("yyyy/MM/dd"))</th>
+                        }
+
+                    </tr>
+                </thead>
+
+                <tbody>
+                   
+
+                    @foreach (var item in Model.ListData)
+                    {
+                      
+                        @*<tr>
+                            <td rowspan="@(item.RateByErrCode.Count + 1)">@item.MODEL_NAME</td>
+                            @foreach (var dts in item.RateByErrCode)
+                            {
+                            <tr>
+                                <td>@dts.ERROR_CODE</td>
+                                @foreach (var dt in dts.DataByErrCode)
+                                {
+                                    <td>@(dt.RATE == -5m ? "N/A" : dt.RATE.ToString())</td>
+                                }
+                            </tr>
+                            }
+
+                            </tr>*@
+
+                    }
+
+
+                    @foreach (var item in Model.ListData)
+                    {
+
+                        <tr>
+                            <td rowspan="@(item.RateByStation.Count+1)">@item.MODEL_NAME</td>
+                            @*<td rowspan="@(item.count_row_model+1)">@item.MODEL_NAME</td>*@
+                            @foreach (var dts in item.RateByStation)
+                            {
+                            <tr>
+                                <td rowspan="@(dts.count_row_station+1)">@dts.GROUP_NAME</td>
+                                @foreach (var dt_er in dts.RateByErrCode)
+                                {
+                                <tr>
+                                    <td>@dt_er.ERROR_CODE</td>
+                                    @foreach (var value in dt_er.DataByErrCode)
+                                    {
+                                        //<td>@value.RATE</td>
+                                        <td>@(value.RATE == -5m ? "N/A" : value.RATE.ToString())</td>
+                                    }
+                                </tr>
+
+                                }
+
+                                </tr>
+                            }
+
+
+                            </tr>
+
+                    }
+
+
+                  
+                </tbody>
+            </table>
+        </div>
+
+
+    </div>
+</section>
+
+
+

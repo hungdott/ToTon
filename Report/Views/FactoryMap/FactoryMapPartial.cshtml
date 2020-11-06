@@ -1,0 +1,53 @@
+﻿@model List<Report.Entity.LstDataLine>
+
+<div>
+    @foreach (var item in Model)
+    {
+        <div class="flex-container">
+            @foreach (var itemLine in item.lstDataModelNameByLine)
+            {
+
+                @*<div class="flex-container">*@
+            foreach (var dataGroup in itemLine.lstDataByGroupInModelName)
+            {
+
+                foreach (var infoByGroup in dataGroup.lstdataGroupInLine)
+                {
+
+                    var infor = "Line :" + item.LINE_NAME + "</br>" + "ModelName: " + itemLine.MODEL_NAME + "</br>" + "GroupName: " + dataGroup.GROUP_NAME + "</br>" + "RR: " + infoByGroup.RR + "</br>" + "YR: " + infoByGroup.YR + "</br> Input: " + infoByGroup.INPUT + "</br> FirstFail:" + infoByGroup.FirstFail + "</br> ReFail: " + infoByGroup.ReFail;
+
+
+
+
+                    if (infoByGroup.RR > 5)
+                    {
+                        <button style="  width:1000px;  line-height:20px;height:50px; text-align:center; background-color:#e41d1d;transition:1.5s; " type="button" class="btn changeColor1 " data-toggle="tooltip" data-html="true" title="@(infor)">
+                            @*btn-secondary*@
+                            @(dataGroup.GROUP_NAME)
+                        </button>
+                    }
+                    else if (infoByGroup.RR >= 3)
+                    {
+                        <button style=" width:1600px;  line-height:20px;height:50px; text-align:center; background-color:#d67726; " type="button" class="btn changeColor2" data-toggle="tooltip" data-html="true" title="@(infor)">
+                            @(dataGroup.GROUP_NAME)
+                        </button>
+                    }
+                    else
+                    {
+                        <button style=" width:1600px;  line-height:20px;height:50px; text-align:center; background-color:green;  transition:1.5s; " type="button" class="btn changeColor3" data-toggle="tooltip" data-html="true" title="@(infor)">
+                            @(dataGroup.GROUP_NAME)
+                        </button>
+                        }
+
+                    }
+
+                }
+
+
+
+
+
+            }
+        </div>
+    }
+</div>

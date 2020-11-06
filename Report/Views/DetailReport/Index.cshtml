@@ -1,0 +1,1196 @@
+﻿@model List<Report.EntityModel.ActionErrorCode>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<style>
+    button.btn.dropdown-toggle.btn-light.bs-placeholder {
+        line-height: 21px;
+        font-size: 30px;
+        font-weight: 200;
+        color: black;
+    }
+
+    .colapselect {
+    height: 22px !important;
+    }
+
+    
+   .design{ background: #3f484a !important;
+    border: #3f484a solid !important;
+    }
+
+   button.btn.dropdown-toggle.btn-light.bs-placeholder
+   {
+        background: #3f484a !important;
+    /*border: #3f484a solid !important;*/
+   }
+  
+
+   .bootstrap-select>.dropdown-toggle:after {
+    margin-top: -1px;
+    color: #53fb0d;
+}
+
+   .dropdown.bootstrap-select {
+   border: solid 0.1px #3a4344;
+    background: #3f484a;
+}
+  .btn-light.dropdown-toggle:hover, .btn-light.dropdown-toggle:focus {
+    background-color: #3a4344 !important;
+}
+
+  .input-group .bootstrap-select.form-control .dropdown-toggle {
+    border-radius: inherit;
+    background-color: #3f484a !important;
+}
+
+</style>
+
+@section DatatableCSS{
+    <link href="~/wwwroot/assets/libs/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css">
+    <link href="~/wwwroot/assets/libs/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css">
+    <link href="~/wwwroot/assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css">
+    <link href="~/wwwroot/assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css">
+
+    <script src="~/wwwroot/dist/js/bootstrap-select.min.js"></script>
+
+}
+@section ScriptSelect{
+    <script src="~/wwwroot/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/wwwroot/dist/js/bootstrap-select.js"></script>
+}
+@section DatatableJs{
+
+
+
+
+
+
+    <!-- Datatables init -->
+    <script src="~/wwwroot/assets/js/pages/datatables.init.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#datatable').DataTable({
+                responsive: true,
+                paging: true,
+                fixedHeader: true
+            });
+
+            //new $.fn.dataTable.FixedHeader( table );
+        });
+
+        $(document).ready(function () {
+            var a = $('button[data-id="exl_week"]')
+            a.addClass('colapselect')
+        });
+
+
+       
+    </script>
+
+
+
+
+
+
+
+
+}
+
+@section tableStyle{
+    <link rel="stylesheet" href="~/wwwroot/css/table.css">
+    <style>
+        .tableFixHead {
+            overflow-y: auto;
+            height: 50em;
+        }
+
+        .dropdown.bootstrap-select {
+            border: solid 0.1px #cccfd2;
+        }
+    </style>
+}
+
+@section DownloadTable{
+    <script>
+        function exportData(tableID) {
+
+            //getting values of current time for generating the file name
+            var dt = new Date();
+            var day = dt.getDate();
+            var month = dt.getMonth() + 1;
+            var year = dt.getFullYear();
+            var hour = dt.getHours();
+            var mins = dt.getMinutes();
+            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+            //creating a temporary HTML link element (they support setting file names)
+            var a = document.createElement('a');
+            //getting data from our div that contains the HTML table
+            var data_type = 'data:application/vnd.ms-excel;charset=utf-8';
+            var tableID = `#${tableID}`
+
+            var table_html = $(tableID)[0].outerHTML;
+            //    table_html = table_html.replace(/ /g, '%20');
+            table_html = table_html.replace(/<tfoot[\s\S.]*tfoot>/gmi, '');
+
+            var css_html = '<style>td {border: 0.5pt solid black}';
+            //    css_html = css_html.replace(/ /g, '%20');
+
+            a.href = data_type + ',' + encodeURIComponent('<html><head>' + css_html + '</' + 'head><body>' + table_html + '</body></html>');
+
+            //setting the file name
+            a.download = 'exported_table_' + postfix + '.xls';
+            //triggering the function
+
+            a.click();
+            //just in case, prevent default behaviour
+            e.preventDefault();
+        }
+
+        function loadFixedHeader() {
+            var $th = $('.tableFixHead').find('thead th')
+            $('.tableFixHead').on('scroll', function () {
+                $th.css('transform', 'translateY(' + this.scrollTop + 'px)');
+            });
+        }
+        loadFixedHeader()
+
+    </script>
+}
+
+@section tooltipHoverToShowData{
+    <script>
+        //$(".HoverTooltip").hover()
+
+        function loadToolTip() {          
+            $(".HoverTooltip").hover(function () {   //hover
+                debugger
+              
+                //var info = $(this).val();
+                //var data = $(this).getAttribute('value') js
+                var data = $(this).attr('value')  //jquery
+                var text = $(this).text();
+                var h = $(this).html()
+                $(this).tooltip({
+                    title: data,
+                    html: true,
+                    animation: true,
+                    placement: "top",
+                    trigger: "click"
+                });
+            });
+        }
+        loadToolTip()
+        
+        //"<h1><strong>HTML</strong> inside <code>the</code> <em>tooltip</em></h1>" +
+
+
+
+
+        //$('.HoverTooltip').tooltip({
+        //    title: "<h1><strong>HTML</strong> inside <code>the</code> <em>tooltip</em></h1>" + Ifo_title,
+        //       								html: true,
+        //                                     animation: true,
+        //                                 placement: "bottom",
+        //                                 trigger: "click"
+        //});
+
+
+       
+
+       
+
+    </script>
+
+    }
+
+@section dateRangeSingle{
+    <script>
+
+        $(function () {
+            $('input[id="testday"]').daterangepicker(
+                {
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    minYear: 1901,
+                    maxYear: parseInt(moment().format("YYYY"), 10),
+                }
+            );
+
+        });
+
+       
+
+
+        $(function () {
+            debugger
+            $('#exl_week').selectpicker('refresh');
+            $('#exl_week_type').selectpicker('refresh');
+            $('#ex_Week_type_model').selectpicker('refresh');
+            $('#ex_Week_type_model_group').selectpicker('refresh');
+            $('#ex_Week_type_model_status').selectpicker('refresh');
+          
+            
+            $('button[data-id="exl_week"]').addClass('colapselect')          
+            $('button[data-id="exl_week_type"]').addClass('colapselect')         
+            $('button[data-id="ex_Week_type_model"]').addClass('colapselect')          
+            $('button[data-id="ex_Week_type_model_group"]').addClass('colapselect')
+            $('button[data-id="ex_Week_type_model_status"]').addClass('colapselect')
+            
+
+        });
+
+
+
+      
+        $(function () {
+            $('#daterange').data('daterangepicker').setStartDate(moment().add(-30, 'day').format('MM/DD/YYYY'));
+            $('#daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));
+        })
+
+        $('#daterange').daterangepicker();
+
+        function onApply_LoadModelToFilter() {
+
+            $('input[id="daterange"]').on('apply.daterangepicker', function (ev, picker) {
+
+                debugger
+                var Statsdate = picker.startDate.format('MM/DD/YYYY')
+                var endDate = picker.endDate.format('MM/DD/YYYY')
+                var FomatStartDate = Statsdate.substring(6, 10) + Statsdate.substring(0, 2) + Statsdate.substring(3, 5)
+                var FomatEndDate = endDate.substring(6, 10) + endDate.substring(0, 2) + endDate.substring(3, 5)
+                var data = new FormData
+                data.append('FromDate', FomatStartDate)
+                data.append('ToDate', FomatEndDate)
+
+
+                $("#loading_result").show();
+
+                $("#animation_loading").css("opacity", "0.5");
+                toastr["success"]("Loading Model Name", "Loading")
+                $.ajax({
+                    type: 'post',
+                    url: '/DetailReport/GetListModeName',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (res) {
+                        debugger
+                        $('#FilterModelName').html('')
+                        $('#FilterModelName').selectpicker('refresh');
+
+                        var re = JSON.parse(res)
+                        //var a = JSON.parse(res)
+                        //var lstmodel = JSON.parse(JSON.parse(res).lstModel)
+                        //var lststation = JSON.parse(JSON.parse(res).lstStation)
+
+                        //==================groupName================
+                        re.forEach(function (e) {
+                            $('#FilterModelName').append('<option>' + e + '</option>')
+                            $('#FilterModelName').selectpicker('refresh');
+
+                        })
+
+
+
+                        $("#loading_result").hide();
+                        $("#animation_loading").css("opacity", "1");
+
+                    },
+                    error: function (err) {
+                        toastr["error"]("Not Success", "Erorr")
+                    }
+
+                })
+
+            });
+        }
+
+        function onApply() {
+
+            $('input[id="daterange"]').on('apply.daterangepicker', function (ev, picker) {
+
+                debugger
+                var Statsdate = picker.startDate.format('MM/DD/YYYY')
+                var endDate = picker.endDate.format('MM/DD/YYYY')
+                var FomatStartDate = Statsdate.substring(6, 10) + Statsdate.substring(0, 2) + Statsdate.substring(3, 5)
+                var FomatEndDate = endDate.substring(6, 10) + endDate.substring(0, 2) + endDate.substring(3, 5)
+                var data = new FormData
+                data.append('FromDate', FomatStartDate)
+                data.append('ToDate', FomatEndDate)
+
+
+                $("#loading_result").show();
+
+                $("#animation_loading").css("opacity", "0.5");
+                toastr["success"]("Loading Model Name", "Loading")
+                $.ajax({
+                    type: 'post',
+                    url: '/DetailReport/AllDataInTime',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (res) {
+                        debugger
+                        $('#tblBody').html(res)
+                        loadFixedHeader()
+
+                        //$('#FilterModelName').html('')
+                        //$('#FilterModelName').selectpicker('refresh');
+
+                        //var re = JSON.parse(res)                      
+                        ////==================groupName================
+                        //re.forEach(function (e) {
+                        //    $('#FilterModelName').append('<option>' + e + '</option>')
+                        //    $('#FilterModelName').selectpicker('refresh');
+
+                        //})
+
+
+
+                        $("#loading_result").hide();
+                        $("#animation_loading").css("opacity", "1");
+
+                    },
+                    error: function (err) {
+                        toastr["error"]("Not Success", "Erorr")
+                    }
+
+                })
+
+            });
+        }
+
+        onApply()
+
+
+
+    </script>
+}
+
+@section HandelControl{
+    <script>
+
+        $(function () {
+            $("#loading_result").hide();
+
+        });
+
+        function addData() {
+            var h = new Date().getHours()
+
+            $('#Id').val(0)
+            //$('#Add_PCName').val('')
+            $('#Add_hour').val('')
+            $('#model').val('')
+            $('#station').val('')
+            $('#link').val('')
+            $('#Add_modelAction').modal("show")
+        }
+
+
+        function clear1()
+        {
+            debugger
+            $('#Add_hour').val("")
+            $('#week').val("")
+            $('#Id').val("")
+            $('#Add_model').val("")
+            $('#Add_PCName').val("")
+            $('#Add_station').val("")
+            $('#Add_workdate').val("")
+            $('#Add_errCode').val("")
+            $('#Add_dueDate').val("")
+            $('#action').val("")//action.getData()
+            $('#rootCause').val("")
+            $('#status').val("")
+            $('#Type').val("")
+            $('#Add_owner').val("")
+            $('#ProblemDes').val("")
+
+        }
+
+        //clear()
+
+        window.action1 = '';
+        ClassicEditor
+            .create(document.querySelector('#action'))
+            .then(editor => {
+
+                action1 = editor;
+            })
+            .catch(error => {
+                console.error(error);
+            });
+
+
+
+
+        function EditData(id, Model, station, Error, Pc, date, dueDate,h,owner,satatus,type,proplem,action,roocause)
+        {
+            debugger
+            clear1()
+
+           // var h = new Date().getHours()
+            var m = new Date().getMinutes()
+
+            Date.prototype.getWeek = function () {
+                var onejan = new Date(this.getFullYear(), 0, 1);
+                return Math.ceil((((this - onejan) / 86400000) + onejan.getDay() + 1) / 7)
+            }
+            var datew = new Date(date)
+            var week = datew.getWeek()
+
+            //$('#Add_hour').val(h+"h"+m)
+
+            $('#Add_hour').val(h)
+            $('#week').val(week)
+            $('#Id').val(id)
+            $('#Add_model').val(Model)
+            $('#Add_PCName').val(Pc)
+            $('#Add_station').val(station)
+            $('#Add_workdate').val(date)
+            $('#Add_errCode').val(Error)
+            $('#Add_dueDate').val(dueDate)
+            //$('#action').val(action)//action.getData()
+            //action.getData()
+            action1.setData(action)
+            $('#rootCause').val(roocause)
+            $('#status').val(satatus)
+            $('#Type').val(type)
+            $('#Add_owner').val(owner)
+            $('#ProblemDes').val(proplem)
+            $('#Add_modelAction').modal("show")
+
+        }
+
+
+
+
+
+    </script>
+
+}
+
+@section HandelSearch{
+    <script>
+
+        function EditDataAndInsetr() {
+            debugger
+            var id =$('#Id').val()
+            var week=$('#week').val()
+            var model = $('#Add_model').val()
+            var owner = $('#Add_owner').val()
+            var dueDate = $('#Add_dueDate').val()
+            var station = $('#Add_station').val()
+            var action = action1.getData()    //$('#action').val()//action.getData()
+            var rootCause = $('#rootCause').val()
+            var errCode = $('#Add_errCode').val()
+            var PCName = $('#Add_PCName').val()
+            var workdate = $('#Add_workdate').val()
+            //var status = $('#status').val()
+            var status = $("#inputGroupSelectStatus").find(":selected").val()
+            var hour = $('#Add_hour').val()
+            //var type = $('#Type').val()
+            var type = $("#inputGroupSelectType").find(":selected").val()
+            var problem = $('#ProblemDes').val()
+
+
+
+            var linkAj = '/DetailReport/EditData';
+
+
+            var dataTest = {
+                Id: id,
+                Owner:owner,
+                Duedate: dueDate,
+                Action: action,
+                RootCause: rootCause,
+                ErrorCode: errCode,
+                Status: status,
+                Type: type,
+                ProblemDes: problem
+            }
+            debugger
+            $.ajax({
+
+                type: 'post',
+                url: linkAj,
+                data: JSON.stringify(dataTest),
+                contentType: 'application/json;charset=utf-8',
+                success: function (res) {
+                    debugger
+                    if (parseInt(id) > 0)
+                    {
+                        toastr["success"]("Edit new model success", "Success")
+                    }
+                    else
+                    {
+                        toastr["success"]("Add model success", "Success")
+                    }
+                   // toastr["success"]("Add new model success", "Success")
+                    $('#tblBody').load('/DetailReport/GetAll')    //datatable   tblEx
+                    loadFixedHeader()
+                    $('#Add_modelAction').modal("hide")
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+        }
+
+
+
+
+        $(document).ready(function(){
+          $("#myInput").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("#tblEx tr").filter(function () {
+              $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+          });
+        });
+
+
+    </script>
+}
+
+@section FilterHandelController{
+    <script>
+
+        function postdata() {
+            debugger
+
+
+
+            var ModelName = $('#FilterModelName').val().toString()
+            var GroupName = $('#FilterGroupName').val().toString()
+            var Status = $('#FilterStatus').val().toString()
+
+
+
+
+            var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            var endDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+
+            var FomatStartDate = startDate.substring(6, 10) + startDate.substring(0, 2) + startDate.substring(3, 5)
+            var FomatEndDate = endDate.substring(6, 10) + endDate.substring(0, 2) + endDate.substring(3, 5)
+
+
+            // var model = $('#FilterModelName').val()
+
+
+
+            var data = new FormData
+            data.append('FromDate', FomatStartDate)
+            data.append('ToDate', FomatEndDate)
+            data.append('ModelName', ModelName)
+            data.append('GroupName', GroupName)
+            data.append('Status', Status)
+
+
+            $.ajax({
+                type: 'post',
+                url: '/DetailReport/ResultDataFilter',
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    $('#tblBody').html(res)
+                    loadFixedHeader()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+
+        }
+
+
+    </script>
+
+}
+
+
+
+@section FilterLikeExcel{
+    <script>
+      
+        function onchangeWeek() {
+            //var ModelName = $('#FilterModelName').val().toString()
+            //var GroupName = $('#FilterGroupName').val().toString()
+            //var Status = $('#FilterStatus').val().toString()
+
+            var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            var endDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+            var week = $("#exl_week").val()
+
+            var FomatStartDate = startDate.substring(6, 10) + startDate.substring(0, 2) + startDate.substring(3, 5)
+            var FomatEndDate = endDate.substring(6, 10) + endDate.substring(0, 2) + endDate.substring(3, 5)
+            var data = new FormData
+            data.append('FromDate', FomatStartDate)
+            data.append('ToDate', FomatEndDate)
+
+            //data.append('ModelName', ModelName)
+            //data.append('GroupName', GroupName)
+            //data.append('Status', Status)
+            data.append('Week', week)
+
+            $.ajax({
+                type: 'post',
+                url: '/DetailReport/ResultDataFilterWeek',
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    debugger
+                    $('#tblBody').html(res)
+                    //var a = $('button[data-id="exl_week"]')
+                    //a.addClass('colapselect')
+                    //var a = $('button[data-id="exl_week_type"]')
+                    //a.addClass('colapselect')
+                    //var a = $('button[data-id="ex_Week_type_model"]')
+                    //a.addClass('colapselect')
+                    //var a = $('button[data-id="ex_Week_type_model_status"]')
+                    //a.addClass('colapselect')
+
+
+                    loadFixedHeader()
+                    loadToolTip()
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+        }
+
+
+        function onchang_Week_Type() {
+            debugger
+            var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            var endDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+            var week = $("#exl_week").val().toString()
+            var type = $("#exl_week_type").val().toString()
+
+            var FomatStartDate = startDate.substring(6, 10) + startDate.substring(0, 2) + startDate.substring(3, 5)
+            var FomatEndDate = endDate.substring(6, 10) + endDate.substring(0, 2) + endDate.substring(3, 5)
+            var data = new FormData
+            data.append('FromDate', FomatStartDate)
+            data.append('ToDate', FomatEndDate)
+
+
+            data.append('Week', week)
+            data.append('Type', type)
+
+            $.ajax({
+                type: 'post',
+                url: '/DetailReport/Filter_week_Type',
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    $('#tblBody').html(res)
+                    loadFixedHeader()
+                    loadToolTip()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+        }
+
+
+
+        function onchang_Week_Type_Model() {
+            debugger
+            var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            var endDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+            var week = $("#exl_week").val().toString()
+            var type = $("#exl_week_type").val().toString()
+            var model = $("#ex_Week_type_model").val().toString()
+
+            var FomatStartDate = startDate.substring(6, 10) + startDate.substring(0, 2) + startDate.substring(3, 5)
+            var FomatEndDate = endDate.substring(6, 10) + endDate.substring(0, 2) + endDate.substring(3, 5)
+            var data = new FormData
+            data.append('FromDate', FomatStartDate)
+            data.append('ToDate', FomatEndDate)
+
+
+            data.append('Week', week)
+            data.append('Type', type)
+            data.append('Model', model)
+
+            $.ajax({
+                type: 'post',
+                url: '/DetailReport/Filter_week_Type_Model',
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    $('#tblBody').html(res)
+                    loadFixedHeader()
+                    loadToolTip()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+        }
+
+
+        function onchang_week_Type_Model_Group() {
+            debugger
+            var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            var endDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+            var week = $("#exl_week").val().toString()
+            var type = $("#exl_week_type").val().toString()
+            var model = $("#ex_Week_type_model").val().toString()
+            var group = $("#ex_Week_type_model_group").val().toString()
+
+            var FomatStartDate = startDate.substring(6, 10) + startDate.substring(0, 2) + startDate.substring(3, 5)
+            var FomatEndDate = endDate.substring(6, 10) + endDate.substring(0, 2) + endDate.substring(3, 5)
+            var data = new FormData
+            data.append('FromDate', FomatStartDate)
+            data.append('ToDate', FomatEndDate)
+
+
+            data.append('Week', week)
+            data.append('Type', type)
+            data.append('Model', model)
+            data.append('Group', group)
+
+            $.ajax({
+                type: 'post',
+                url: '/DetailReport/Filter_week_Type_Model_Group',
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    $('#tblBody').html(res)
+                    loadFixedHeader()
+                    loadToolTip()
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+        }
+
+      
+
+
+
+        function onchang_Week_Type_Model_Group_Sataus() {
+            debugger
+            var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            var endDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+            var week = $("#exl_week").val().toString()
+            var type = $("#exl_week_type").val().toString()
+            var model = $("#ex_Week_type_model").val().toString()
+            var group = $("#ex_Week_type_model_group").val().toString()
+            var status = $("#ex_Week_type_model_status").val().toString()
+
+            var FomatStartDate = startDate.substring(6, 10) + startDate.substring(0, 2) + startDate.substring(3, 5)
+            var FomatEndDate = endDate.substring(6, 10) + endDate.substring(0, 2) + endDate.substring(3, 5)
+            var data = new FormData
+            data.append('FromDate', FomatStartDate)
+            data.append('ToDate', FomatEndDate)
+
+
+            data.append('Week', week)
+            data.append('Type', type)
+            data.append('Model', model)
+            data.append('Group', group)
+            
+            data.append('Status', status)
+
+            $.ajax({
+                type: 'post',
+                url: '/DetailReport/Filter_week_Type_Model_Group_Sataus',
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    $('#tblBody').html(res)
+                    loadFixedHeader()
+                    loadToolTip()
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+        }
+    </script>
+}
+
+
+
+
+<!--Modal: Contact form-->
+<div class="modal fade" id="Add_modelAction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog cascading-modal modal-lg" role="document">
+        <!--Content-->
+        <div class="modal-content">
+
+            <!--Header-->
+            <div class="modal-header light-blue darken-3 white-text">
+                <button type="button" class="close waves-effect waves-light" id="closeModelAction" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="title"><i class="fa fa-pencil"></i>Action ErrorCode</h4>
+            </div>
+            <!--Body-->
+            <div class="modal-body mb-0">
+                <div class="container">
+                    <input type="hidden" id="Id" />
+                    <div class="row">
+                        <!-- left -->
+                        <div class="col-lg-4">
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="Add_model" class="form-control" value="a">
+                                <label for="Add_model" class="active">Model Name</label>
+                            </div>
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input disabled type="text" id="Add_PCName" class="form-control" value="a">
+                                <label for="Add_PCName">PCName</label>
+                            </div>
+
+
+
+                        </div>
+                        <!-- mid -->
+                        <div class="col-lg-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="Add_station" class="form-control" value="a">
+                                <label for="Add_station" class="active">Station Name</label>
+                            </div>
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="Add_workdate" class="form-control" value="1999-11-11">
+                                <label for="Add_workdate" class="active">WorkDate</label>
+                            </div>
+                        </div>
+
+                        <!-- right -->
+                        <div class="col-lg-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-lock prefix active"></i>
+                                <input disabled type="text" id="Add_errCode" class="form-control" value="a">
+                                <label for="Add_errCode" class="active">ErrorCode</label>
+                            </div>
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input disabled type="text" id="week" class="form-control" value="a">
+                                <label for="week">Week</label>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-lg-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input disabled type="text" id="Add_hour" class="form-control" value="a">
+                                <label for="Add_hour">Hour</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input type="text" id="Add_dueDate" class="form-control" value="1999-11-11">
+                                <label for="Add_dueDate" class="active">DueDate</label>
+                            </div>
+                        </div>
+
+
+
+                        @*<div class="col-lg-4">
+                                <div class="md-form form-sm">
+                                    <i class="fa fa-envelope prefix "></i>
+                                    <input type="text" id="Type" class="form-control" value="a">
+                                    <label for="Type">Type</label>
+                                </div>
+                            </div>*@
+                        <div class="col-4">
+                            <div class="input-group" style="height:100%">
+                                <div class="input-group-prepend" style="height:40px">
+                                    <label style="margin-top:20px; height:40px;" class="input-group-text" for="inputGroupSelectStatus">Style</label>
+                                </div>
+                                <select class="custom-select" id="inputGroupSelectType" style="margin-top:20px; width: 205px; height: 40px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;">
+
+                                    <option id="Project" value="Project">Project</option>
+                                    <option selected id="TPG" value="TPG">TPG</option>
+                                    <option id="Other" value="Other">Other</option>
+                                    <option id="SetUp" value="SetUp">SetUp</option>
+                                    <option id="OBA" value="OBA">OBA</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <div class="row">
+
+
+                        <div class="col-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input type="text" id="Add_owner" class="form-control" value="a">
+                                <label for="Add_owner">Owner</label>
+                            </div>
+                        </div>
+
+
+                        @*<div class="col-4">
+                                <div class="md-form form-sm">
+                                    <i class="fa fa-lock prefix"></i>
+                                    <input type="text" id="status" class="form-control" value="a">
+                                    <label for="status">Status</label>
+                                </div>
+                            </div>*@
+
+                        <div class="col-4">
+                            <div class="input-group" style="height:100%">
+                                <div class="input-group-prepend" style="height:40px">
+                                    <label style="margin-top:20px; height:40px;" class="input-group-text" for="inputGroupSelectStatus">Status</label>
+                                </div>
+                                <select class="custom-select" id="inputGroupSelectStatus" style="margin-top:20px; width: 205px; height: 40px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;">
+
+                                    <option id="Done" value="Done">Done</option>
+                                    <option selected id="OnGoing" value="On Going">On Going</option>
+                                    <option id="Open" value="Open">Open</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+
+
+                    @* CK *@
+                    <div class="row">
+                        <div class="col-lg-11">
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input type="text" id="ProblemDes" class="form-control" value="a">
+                                <label for="ProblemDes">Proplem</label>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-11">
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <textarea placeholder="Root Cause" type="text" id="rootCause" class="form-control" style="resize: none;"></textarea>
+                                <label for="rootCause">Root Cause</label>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        @*<div class="col-lg-11">
+
+                                <div class="md-form form-sm">
+                                    <i class="fa fa-envelope prefix "></i>
+                                    <textarea placeholder="action" type="text" id="action" class="form-control" style="resize: none;"></textarea>
+                                    <label for="action">Action</label>
+                                </div>
+
+                            </div>*@
+
+                        <div id="action"></div>
+                    </div>
+
+                </div>
+
+                <div class="text-center mt-1-half">
+                    <button class="btn btn-info mb-2" onclick="EditDataAndInsetr()">Send<i class="fa fa-send ml-1"></i></button>
+                </div>
+            </div>
+        </div>
+        <!--/.Content-->
+    </div>
+</div>
+
+
+<!-- and font add-->
+
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">Detail Report</h1>
+            </div><!-- /.col -->
+
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+
+<section class="content">
+    <div id="animation_loading">
+        <div class="container-fluid">
+            <div style="padding-bottom:20px;" class="row mb-2">
+
+                <div class="col-2" style="padding-left: 0;">
+                    <input style="height:35px;" id="daterange" class="form-control" type="text" name="daterange" />
+                </div>
+
+
+                @*<div class="col-2">
+                    <div class="input-group" style="height:100%">
+
+                        <select class="selectpicker form-control" id="FilterModelName" title="Select Model Name" data-hide-disabled="true" multiple data-actions-box="true" data-virtual-scroll="false" data-container="body" data-live-search="true">
+                            @foreach (var item in Model.GroupBy(x => x.ModelName).Select(k => k.Key))
+                            {
+                                <option>@item</option>
+                            }
+
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="input-group" style="height:100%">
+
+                        <select class="selectpicker form-control" id="FilterGroupName" title="Select GruopName" data-hide-disabled="true" multiple data-actions-box="true" data-virtual-scroll="false" data-container="body" data-live-search="true">
+                            <option>PT</option>
+                            <option>PT0</option>
+                            <option>PT1</option>
+                            <option>PT2</option>
+                            <option>PT3</option>
+                            <option>FT</option>
+                            <option>FT0</option>
+                            <option>FT1</option>
+                            <option>FT2</option>
+                            <option>FT3</option>
+                            <option>NFT</option>
+                            <option>RC</option>
+                            <option>RC1</option>
+                            <option>RC2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="input-group" style="height:100%">
+
+                        <select class="selectpicker form-control" id="FilterStatus" title="Select Status" data-hide-disabled="true" multiple data-actions-box="true" data-virtual-scroll="false" data-container="body" data-live-search="true">
+
+                            <option>Done</option>
+                            <option>On Going</option>
+                            <option>Open</option>
+
+                        </select>
+                    </div>
+                </div>*@
+
+                <div class=" col-2">
+                    <input style="height: 35px;border-radius: 8px;width: 200px;" id="myInput" type="text" placeholder="Owner">
+
+                </div>
+
+
+
+
+
+
+                @*<div class="col-1" style="padding-left: 0; margin-top:2px;">
+                    <button onclick="postdata()" type="button" style=" border-radius:5px;margin-left: -58px; margin-top: 0px; height: 42px;" class="btn btn-success">Filters</button>
+                </div>*@
+
+                <div class="col-1">
+                    <button id="btnFA" onclick="exportData('tblEx')" style="width: 14em; margin-left:-76px;margin-top: 0px; height: 35px;" class="btn btn-primary">
+                        <i class="fas fa-file-download"></i>
+                        Download
+                    </button>
+                </div>
+
+
+
+
+                @*<div lass="col-2">*@
+                <div style="width:100px; height:100px;z-index:20 ;position:absolute;margin:100px 500px;" id="loading_result" class="lv-bars lv-mid lg"></div>
+                @*</div>*@
+            </div>
+
+          
+
+
+
+           
+
+            <div class="row justify-content-center mb-5 tableFixHead ">
+                <table class="responsive-table" id="tblEx">
+                    @Html.Partial("~/Views/DetailReport/DetailReportPartial.cshtml", Model)                  
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+</section>

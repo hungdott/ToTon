@@ -1,0 +1,490 @@
+﻿@model  List<Report.Entity.DataInPutModelNamebyShift>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section tableStyle{
+    <link rel="stylesheet" href="~/wwwroot/css/table.css">
+    <style>
+        .tableFixHead {
+            overflow-y: auto;
+            height: 50em;
+        }
+
+         .hoverModel:hover{
+            color:#007bff;
+        }
+    </style>
+}
+
+@section DownloadTable{
+    <script>
+
+       
+
+        function exportData(tableID) {
+
+            //getting values of current time for generating the file name
+            var dt = new Date();
+            var day = dt.getDate();
+            var month = dt.getMonth() + 1;
+            var year = dt.getFullYear();
+            var hour = dt.getHours();
+            var mins = dt.getMinutes();
+            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+            //creating a temporary HTML link element (they support setting file names)
+            var a = document.createElement('a');
+            //getting data from our div that contains the HTML table
+            var data_type = 'data:application/vnd.ms-excel;charset=utf-8';
+            var tableID = `#${tableID}`
+
+            var table_html = $(tableID)[0].outerHTML;
+            //    table_html = table_html.replace(/ /g, '%20');
+            table_html = table_html.replace(/<tfoot[\s\S.]*tfoot>/gmi, '');
+
+            var css_html = '<style>td {border: 0.5pt solid black}';
+            //    css_html = css_html.replace(/ /g, '%20');
+
+            a.href = data_type + ',' + encodeURIComponent('<html><head>' + css_html + '</' + 'head><body>' + table_html + '</body></html>');
+
+            //setting the file name
+            a.download = 'exported_table_' + postfix + '.xls';
+            //triggering the function
+
+            a.click();
+            //just in case, prevent default behaviour
+            e.preventDefault();
+        }
+
+        function loadFixedHeader() {
+            var $th = $('.tableFixHead').find('thead th')
+            $('.tableFixHead').on('scroll', function () {
+                $th.css('transform', 'translateY(' + this.scrollTop + 'px)');
+            });
+        }
+        loadFixedHeader()
+    </script>
+
+}
+
+
+
+@section dateRangeSingle{
+    <script>
+
+        $(function () {
+            $('input[id="testday"]').daterangepicker(
+                {
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    minYear: 1901,
+                    maxYear: parseInt(moment().format("YYYY"), 10),
+                }
+            );
+
+        });
+
+
+
+        $(function () {
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'left'
+            }, function (start, end, label) {
+                debugger
+                console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                var deta = end._d.getDate() - start._d.getDate()
+                var monthStart = start._d.getMonth()
+                var monthEnd = end._d.getMonth()
+                var d=(end-start)/86400000
+
+                 if (d>7) {
+                    toastr["error"]("Mời chọn số ngày nhỏ hơn 7", "Erorr")
+                }
+
+
+            });
+
+        });
+
+
+        $(function () {
+            $('#daterange').data('daterangepicker').setStartDate(moment().add(-5, 'day').format('MM/DD/YYYY'));
+            $('#daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));
+        })
+
+        $('#daterange').daterangepicker();
+
+    </script>
+
+}
+
+@section DrawChartAbnormal{
+     <script>
+
+         //function toggleDataSeries(e) {
+         //    if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+         //        e.dataSeries.visible = false;
+         //    }
+         //    else {
+         //        e.dataSeries.visible = true;
+         //    }
+         //    chart.render();
+         //}
+
+        
+
+         function genRandomColor() {
+
+             var letters = '0123456789ABCDEF';
+             var color = '#';
+             for (var i = 0; i < 6; i++) {
+                 color += letters[Math.floor(Math.random() * 16)]
+
+             }
+             return color;
+         }
+
+
+         function ShowChartByModel_Abnormal(modelName) {
+             var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+             var SDate = date.substring(6, 10) + date.substring(0, 2) + date.substring(3, 5)
+             var shift = $("#inputGroupSelect01").find(":selected").val()
+             var formHour = $("#FromHour").val()
+             var ToHour = $("#ToHour").val()
+
+             $('#modelName_Chart').val(modelName)
+          
+             debugger
+             var data = new FormData
+            
+             data.append('ModelName', modelName)
+             data.append('DataTime', SDate)
+             data.append('Shift', shift)
+             data.append('FromHour', formHour)
+             data.append('ToHour', ToHour)
+            
+
+             debugger
+             $.ajax({
+                 type: 'post',
+                 url: '/Abnormal/DataDrawChartByModelByAbnormal',
+                 data: data,
+                 contentType: false,
+                 processData: false,
+                 success: function (res) {
+                     debugger
+                     var data = []
+                     res.forEach(function (e) {
+                         var genColor=genRandomColor()
+                         var itemObj = {
+                             type: "column",
+                             name: e.GROUP_NAME,
+                             legendText: e.GROUP_NAME,
+                             showInLegend: true,
+                             color: genColor,
+                         }
+                         itemObj.dataPoints = []
+                         e.dataGroupNameByHour.forEach(function (e) {
+                             item = {}
+                             item.label = e.WORK_SECTION
+                             item.y = e.INPUT
+                             itemObj.dataPoints.push(item)
+                         })
+
+                         data.push(itemObj)
+
+                     })
+
+                   
+                    
+                    
+                     setTimeout(function () {
+                         var chart = new CanvasJS.Chart("chartContainer", {
+                             animationEnabled: true,
+                             //theme: "dark1",
+                             title: {
+                                 text: "Chart Input Of Group Name By Hour"
+                             },
+                             axisY: {
+                                 title: "InPut",
+                                 titleFontColor: "#4F81BC",
+                                 lineColor: "#4F81BC",
+                                 labelFontColor: "#4F81BC",
+                                 tickColor: "#4F81BC"
+                             },
+                             axisY2: {
+                                 title: "Millions of Barrels/day",
+                                 titleFontColor: "#C0504E",
+                                 lineColor: "#C0504E",
+                                 labelFontColor: "#C0504E",
+                                 tickColor: "#C0504E"
+                             },
+                             toolTip: {
+                                 shared: true
+                             },
+                             legend: {
+                                 cursor: "pointer",
+                                 itemclick: toggleDataSeries
+                             },
+
+                             data: data
+                         });
+                         chart.render();
+
+                         function toggleDataSeries(e) {
+                             if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                                 e.dataSeries.visible = false;
+                             }
+                             else {
+                                 e.dataSeries.visible = true;
+                             }
+                             chart.render();
+                         }
+                        
+                         
+                     }, 200)
+                     $('#modalAction').modal("show")
+                 },
+                 error: function (err) {
+                     toastr["error"]("Not Success", "Erorr")
+                 }
+             })
+         }
+
+       
+        
+     </script>
+
+
+
+
+}
+
+
+@section HandelControl{
+    <script>
+
+        $(function () {
+            $("#loading_result").hide();
+
+        });
+
+        function postdata() {
+            debugger
+
+            var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+            var SDate = date.substring(6, 10) + date.substring(0, 2) + date.substring(3, 5)
+            var shift = $("#inputGroupSelect01").find(":selected").val()
+
+            var formHour = $("#FromHour").val()
+            var ToHour=$("#ToHour").val()
+           // var optionDay = $("#optionByDay").find(":selected").val()
+           // var model = $("#modelName").find(":selected").val()
+
+            if (shift.includes('Choose')) {
+                toastr["error"]("Mời chọn ca làm việc", "Erorr")
+                return
+            }
+
+            $("#loading_result").show();
+        
+            $("#animation_loading").css("opacity", "0.5");
+
+            var data = new FormData
+            data.append('thisDate', SDate)        
+            data.append('Shift', shift)
+
+            data.append('FromHour', formHour)
+            data.append('ToHour', ToHour)
+          
+
+            $.ajax({
+                type: 'post',
+                url: '/Abnormal/DataFilter',
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    $('#tblEx').html(res)
+                    loadFixedHeader()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+        }
+
+
+
+    </script>
+
+}
+
+
+ <!--draw chart by model name-->
+<div class="modal fade" id="modalAction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+<div class="modal-dialog cascading-modal modal-lg" role="document">
+    <!--Content-->
+    <div style="width:1200px;" class="modal-content">
+
+        <!--Header-->
+        <div class="modal-header light-blue darken-3 white-text">
+            <button type="button" class="close waves-effect waves-light" id="closeModal" data-dismiss="modal"
+                    aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="title"><i class="fa fa-pencil"></i>Chart model name</h4>
+        </div>
+        <!--Body-->
+        <div class="modal-body mb-0">
+            <input type="hidden" id="Id" />
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-5">
+                        <div class="md-form form-sm">
+                            <i class="fa fa-envelope prefix active"></i>
+                            <input disabled type="text" id="modelName_Chart" class="form-control" value="a">
+                            <label for="modelName_Chart" class="active">Model Name</label>
+                        </div>
+                    </div>
+
+                   
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                       
+                        <div id="chartContainer" style="height: 370px; max-width: 1040px;"></div>
+                      
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/.Content-->
+</div>
+</div>
+
+
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">Input Of Station By Hour</h1>
+            </div><!-- /.col -->
+
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+
+<section class="content">
+    <div id="animation_loading">
+        <div class="container-fluid">
+            <div style="margin-bottom:20px;" class="row mb-2">
+                <div class="col-1" style="padding-left: 0;">
+                    <input style=" width:150px;height:45px; font-weight:bold; color:black; font-size:16px;" class="form-control" id="testday" type="text" name="testday" placeholder="Enter test day">
+                </div>
+
+
+                <div style="margin-left: 10px;" class="col-2">
+                    <div class="input-group" style="height:100%">
+                        <div class="input-group-prepend" style="height:100%">
+                            <label class="input-group-text" for="inputGroupSelect01">Shift</label>
+                        </div>
+                        <select class="custom-select" id="inputGroupSelect01" style="height:100%">
+                            <option>Choose...</option>
+                            <option  id="allday" value="Allday">All Day</option>
+                            <option selected id="day" value="day">Day shift</option>
+                            <option id="night" value="night">Night shift</option>
+
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="input-group" style="height:100%;width:60%">
+                        <div class="input-group-prepend" style="height:100%">
+                            <label style="height:40px;" class="input-group-text" for="selectTop3">From Hour</label>
+                            <select id="FromHour" class="custom-select" style="width: 150px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                <option selected value="30">Choose...</option>
+
+                                @for (var FHour = 0; FHour < 23; FHour++)
+                                {
+                                    <option value="@FHour">@FHour:30h</option>
+                                }
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="input-group" style="height:100%;width:60%">
+                        <div class="input-group-prepend" style="height:100%">
+                            <label style="height:40px;" class="input-group-text" for="selectTop3">To Hour</label>
+                            <select id="ToHour" class="custom-select" style="width: 150px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                <option selected value="30">Choose...</option>
+                                @for (var THour = 0; THour < 24; THour++)
+                                {
+                                    <option value="@THour">@THour:30h</option>
+                                }
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+
+              
+                <div class="col-1" style="padding-left: 0; margin-top:2px;">
+                    <button onclick="postdata()" type="button" style=" border-radius:5px;height:38px;" class="btn btn-success">Filters</button>
+
+                </div>
+               
+                <div class="col-2" style="padding-left:10px;">
+                    <button id="btnFA" onclick="exportData('tblEx')" style="width: 13em;height: 40px;" class="btn btn-primary">
+                        <i class="fas fa-file-download"></i>
+                        Download
+                    </button>
+                </div>
+             
+                @*<div lass="col-2">*@
+                <div style="width:100px; height:100px;z-index:20 ;position:absolute;margin:100px 500px;" id="loading_result" class="lv-bars lv-mid lg"></div>
+                @*</div>*@
+
+
+               
+            </div>
+
+            <hr style="margin-bottom:20px;" />
+
+            @*<div class="row mb-2">
+                <div class="col-4" style="padding-left: 59em;">
+                    <button id="btnFA" onclick="exportData('tblEx')" style="width: 13em;" class="btn btn-primary">
+                        <i class="fas fa-file-download"></i>
+                        Download
+                    </button>
+                </div>
+            </div>*@
+
+            <div class="row justify-content-center mb-5 tableFixHead ">
+                <table class="responsive-table" id="tblEx">
+                    @Html.Partial("~/Views/Abnormal/AbnormalPartial.cshtml", Model)
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+</section>
+

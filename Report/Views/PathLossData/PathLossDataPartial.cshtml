@@ -1,0 +1,53 @@
+﻿@model List<Report.EntityPathloss.PathlossByShift>
+<thead>
+    <tr>
+        <th>PC Name</th>
+        <th>Model Name</th>
+        <th>Group Name</th>
+        <th>Day Shift</th>
+        <th>Night Shift</th>
+
+       
+    </tr>
+</thead>
+
+<tbody>
+
+
+    @foreach (var item in Model)
+    {
+      <tr>
+          <td>@(item.PCName)</td>
+          <td>@(item.Dotname)</td>
+          <td>@(item.Station)</td>
+        
+          @if(item.Shift==1)
+          {
+              <td>@(item.Status)</td>
+              <td></td>
+          }
+          else
+          {
+            <td></td>
+            <td>@(item.Status)</td>
+          }
+
+      </tr>
+
+
+
+    }
+
+
+
+
+
+</tbody>
+
+
+
+
+
+
+
+

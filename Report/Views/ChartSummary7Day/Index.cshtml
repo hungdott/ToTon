@@ -1,0 +1,2603 @@
+﻿@model  Report.Entity.TopData
+@{
+    ViewBag.Title = "RRbyStation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section tableStyle{
+    <link rel="stylesheet" href="~/wwwroot/css/table.css">
+    <style>
+        .tableFixHead {
+            overflow-y: auto;
+            height: 50em;
+        }
+
+        .dropdown.bootstrap-select {
+            border: solid 0.1px #cccfd2;
+        }
+
+        .hideView {
+            visibility: hidden;
+            display: none;
+        }
+
+        .showView {
+            visibility: visible;
+            display: block;
+        }
+
+        .hoverModel:hover {
+            color: #007bff;
+        }
+    </style>
+}
+
+@section DownloadTable{
+    <script>
+        function exportData(tableID) {
+
+            //getting values of current time for generating the file name
+            var dt = new Date();
+            var day = dt.getDate();
+            var month = dt.getMonth() + 1;
+            var year = dt.getFullYear();
+            var hour = dt.getHours();
+            var mins = dt.getMinutes();
+            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+            //creating a temporary HTML link element (they support setting file names)
+            var a = document.createElement('a');
+            //getting data from our div that contains the HTML table
+            var data_type = 'data:application/vnd.ms-excel;charset=utf-8';
+            var tableID = `#${tableID}`
+
+            var table_html = $(tableID)[0].outerHTML;
+            //    table_html = table_html.replace(/ /g, '%20');
+            table_html = table_html.replace(/<tfoot[\s\S.]*tfoot>/gmi, '');
+
+            var css_html = '<style>td {border: 0.5pt solid black}';
+            //    css_html = css_html.replace(/ /g, '%20');
+
+            a.href = data_type + ',' + encodeURIComponent('<html><head>' + css_html + '</' + 'head><body>' + table_html + '</body></html>');
+
+            //setting the file name
+            a.download = 'exported_table_' + postfix + '.xls';
+            //triggering the function
+
+            a.click();
+            //just in case, prevent default behaviour
+            e.preventDefault();
+        }
+
+        function loadFixedHeader() {
+            var $th = $('.tableFixHead').find('thead th')
+            $('.tableFixHead').on('scroll', function () {
+                $th.css('transform', 'translateY(' + this.scrollTop + 'px)');
+            });
+        }
+        loadFixedHeader()
+    </script>
+}
+
+@section dateRangeSingle{
+    <script>
+
+        //get data one day
+        $(function () {
+            // debugger
+            $('input[id="testday"]').daterangepicker(
+                {
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    minYear: 1901,
+                    maxYear: parseInt(moment().format("YYYY"), 10),
+                }
+            );
+
+        });
+        $(function () {
+            //debugger
+            var d = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+        })
+        function onApply() {
+            $('input[id="testday"]').on('apply.daterangepicker', function (ev, picker) {
+                var date = picker.startDate.format('MM/DD/YYYY')
+                debugger
+                //====
+                var date11 = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+
+                var NowDate = $("#testday").data('daterangepicker').startDate._d;
+
+                var _nextDate = new Date()
+                _nextDate.setDate(NowDate.getDate() + 1)
+                var sNextDate = _nextDate.getMonth() + 1 + "/" + _nextDate.getDate() + "/" + _nextDate.getFullYear()
+
+                //====
+                var shift = $("#inputGroupSelect01").find(":selected").val()
+
+
+                var data = new FormData
+                data.append('day', date)
+                data.append('Nextday', sNextDate)
+                data.append('shift', shift)
+
+                $("#loading_result").show();
+                // $("#animation_loading").addClass("animation_loading");
+                $("#animation_loading").css("opacity", "0.5");
+                toastr["success"]("Loading Model Name", "Loading")
+                $.ajax({
+                    type: 'post',
+                    url: '/TopErrorByStation/GetStation',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (res) {
+                        debugger
+                        $('#GroupName').html('<option selected>All Station</option>')
+                        $('#GroupName').selectpicker('refresh');
+                        var result = JSON.parse(res)
+                        var a = JSON.parse(res)
+                        var lstmodel = JSON.parse(JSON.parse(res).lstModel)
+                        var lststation = JSON.parse(JSON.parse(res).lstStation)
+                        //groupName
+                        lststation.forEach(function (e) {
+                            $('#GroupName').append('<option>' + e + '</option>')
+                            $('#GroupName').selectpicker('refresh');
+
+                        })
+
+                        //ModelName
+                        $('#modelName').html('<option selected>All Model</option>')
+                        $('#modelName').selectpicker('refresh');
+                        var iM=0
+                        lstmodel.forEach(function (e) {
+                            iM++
+                            //$('#modelName').append('<option value="">' + iM + ': ' + e + '</option>')
+                            $('#modelName').append('<option value="'+e+'">' + iM + ': ' + e + '</option>')
+                            $('#modelName').selectpicker('refresh');
+                        })
+                        $("#loading_result").hide();
+                        $("#animation_loading").css("opacity", "1");
+
+                    },
+                    error: function (err) {
+                        toastr["error"]("Not Success", "Erorr")
+                    }
+
+                })
+
+            });
+        }
+        onApply()
+
+        //=============================================
+
+        function OnChange() {
+            debugger
+
+            var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+
+            var NowDate = $("#testday").data('daterangepicker').startDate._d;
+
+            var _nextDate = new Date()
+            _nextDate.setDate(NowDate.getDate() + 1)
+            var sNextDate = _nextDate.getMonth() + 1 + "/" + _nextDate.getDate() + "/" + _nextDate.getFullYear()
+
+
+                //var date = picker.startDate.format('MM/DD/YYYY')
+
+
+                var Station = document.getElementById("GroupName").value
+
+
+
+                var data = new FormData
+                data.append('day', date)
+                data.append('nextDate', sNextDate)
+                data.append('station',Station)
+
+
+                $.ajax({
+                    type: 'post',
+                    url: '/TopErrorByStation/GetModel',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (res) {
+                        debugger
+                        $('#modelName').html('<option selected>All Model</option>')
+                        $('#modelName').selectpicker('refresh');
+                        var result = JSON.parse(res)
+                        result.forEach(function (e) {
+                            $('#modelName').append('<option>' + e + '</option>')
+                            $('#modelName').selectpicker('refresh');
+
+                        })
+
+                    },
+                    error: function (err) {
+                        toastr["error"]("Not Success", "Erorr")
+                    }
+
+                })
+
+
+        }
+
+        OnChange()
+        //================================================
+        $(function () {
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'left'
+            }, function (start, end, label) {
+                // debugger
+                console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                var deta = end._d.getDate() - start._d.getDate()
+                var monthStart = start._d.getMonth()
+                var monthEnd = end._d.getMonth()
+                var d = (end - start) / 86400000
+
+                if (d > 7) {
+                    toastr["error"]("Mời chọn số ngày nhỏ hơn 7", "Erorr")
+                }
+
+
+            });
+
+        });
+        $(function () {
+            $('#daterange').data('daterangepicker').setStartDate(moment().add(-5, 'day').format('MM/DD/YYYY'));
+            $('#daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));
+        })
+
+        $('#daterange').daterangepicker();
+        $(function () {
+            // debugger
+            var date = new Date();
+            var Hours_now = date.getHours();
+            if (Hours_now > 7 && Hours_now < 20) {
+                $('#day').attr('selected', 'selected');
+            }
+            else if (Hours_now < 8 || Hours_now > 19) {
+
+                $('#night').attr('selected', 'selected');
+            }
+        });
+    </script>
+
+}
+
+
+
+@section HandelControl{
+    <script>
+
+        $(function () {
+            $("#loading_result").hide();
+
+        });
+
+        function showWiew() {
+            $('#tblEx').removeClass('hideView').addClass('showView');
+            $('#header_choose').removeClass('hideView').addClass('showView');
+
+            $('#ShowChartByPcname').removeClass('showView').addClass('hideView');
+            $('#modalAction').modal("show")
+            // location.reload();
+        }
+
+        function showWiewAndHideMes() {
+            $('#tblEx').removeClass('hideView').addClass('showView');
+            $('#header_choose').removeClass('hideView').addClass('showView');
+
+            $('#ShowChartByPcname').removeClass('showView').addClass('hideView');
+
+
+
+
+        }
+
+
+        function showWiewChartSummary() {
+            $('#ShowChartByPcname').removeClass('showView').addClass('hideView');
+            $('#tblEx').removeClass('hideView').addClass('showView');
+
+        }
+
+
+        function postdata() {
+            debugger
+            //var startDate = $("#daterange").data('daterangepicker').startDate.format('MM/DD/YYYY')
+            //var toDate = $("#daterange").data('daterangepicker').endDate.format('MM/DD/YYYY')
+            //var shift = $("#inputGroupSelect01").find(":selected").val()
+            //get data one day
+            var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+            var NowDate = $("#testday").data('daterangepicker').startDate._d;
+
+            var _nextDate = new Date()
+            _nextDate.setDate(NowDate.getDate() + 1)
+            var sNextDate = _nextDate.getMonth()+1 + "/" + _nextDate.getDate() + "/" + _nextDate.getFullYear()
+
+            //get option
+
+            var option = document.getElementById("selectTop3").value
+            var groupName = document.getElementById("GroupName").value
+            var modelName = document.getElementById("modelName").value
+            var shift = $("#inputGroupSelect01").find(":selected").val()
+            var pcs = document.getElementById("PCSByStation").value
+            var fromHour = document.getElementById("FromHour").value;
+            var ToHour = document.getElementById("ToHour").value;
+
+            //line change or no change
+            var optionLine = document.getElementById("LineChange").value
+
+
+            if (option.includes('Choose')) {
+                toastr["error"]("Do you want to chosse All data or top 3", "Erorr")
+                // toastr["error"]("Do you want to chosse All data or top 3", "Erorr")
+                //success
+                return
+            }
+
+
+
+            $("#loading_result").show();
+            // $("#animation_loading").addClass("animation_loading");
+            toastr["success"]("Loading Data", "Loading")
+            $("#animation_loading").css("opacity", "0.5");
+
+            debugger
+            var data = new FormData
+            data.append('Date', date)
+            data.append('Option', option)
+            data.append('group_name', groupName)
+            data.append('ModelName', modelName)
+            data.append('Shift', shift)
+            data.append('NextDate', sNextDate)
+            data.append('PCS', pcs)
+            data.append('fromHour', fromHour)
+            data.append('toHour', ToHour)
+            data.append('StatusLine', optionLine)
+
+
+
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/GetTop3',
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+
+                    $('#tblEx').html(res)
+                    loadFixedHeader()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+        }
+
+
+        function postdataToFind()
+        {
+            debugger
+            $("#loading_result").show();
+            $("#animation_loading").css("opacity", "0.5");
+            var modelName = document.getElementById("modelNameFind").value
+            var data = new FormData
+            data.append('Model_name', modelName)
+
+
+
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/findDateLaster',
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    debugger
+                    $('#tblEx').html(res)
+                    loadFixedHeader()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+
+
+        }
+
+        function getTop3() {
+
+        }
+
+        //=== draw chart ModelName one Station
+        $(function () {
+            $('#modelName_Chart').val('')
+            $('#station').val('')
+            $('#modalAction').modal("hide")
+        })
+
+        function toggleDataSeries(e) {
+            if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                e.dataSeries.visible = false;
+            } else {
+                e.dataSeries.visible = true;
+            }
+            e.chart.render();
+        }
+
+        function genRandomColor() {
+
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)]
+
+            }
+            return color;
+        }
+
+
+        //=================draw chart by Error code ========
+        function drawChartByErrorCode(ErrorCode,data)
+        {
+            $(".panel-body").append('<div id="' + (ErrorCode) + '"' + ' style="height: 370px; max-width: 920px; margin: 20px auto;"></div>');
+            var lstError=data
+            var dataa6 = []
+            lstError.forEach(function (lstPC) {
+                var gecolor = genRandomColor()
+                lstPC.StattionName
+                var itemObj = {
+                    type: "line",
+                    showInLegend: true,
+                    name: lstPC.StattionName,
+                    markerType: "square",
+                    //xValueFormatString: "DD MMM, YYYY",
+                    color: gecolor,
+                }
+                itemObj.dataPoints = []
+
+                lstPC.dataHour.forEach(function (hour) {
+                    var Datahour = {}
+                    Datahour.x = hour.WORK_SECTION
+                    Datahour.y = hour.SUM_TEST_FAIL_ER
+                    // item.indexLabel = (s.lstDataBysation[0].RR_s).toString()+"%"
+                    Datahour.indexLabel = (hour.SUM_TEST_FAIL_ER).toString()+ "fail"
+
+                    itemObj.dataPoints.push(Datahour)
+                })
+                dataa6.push(itemObj)
+            })
+
+            var chart = new CanvasJS.Chart(ErrorCode, {
+                exportEnabled: true,
+                animationEnabled: true,
+                title: {
+                    text: "Error Code: " + ErrorCode
+                },
+                axisY: {
+                    title: "Error Code",
+                    lineColor: "#C24642",
+                    tickColor: "#C24642",
+                    labelFontColor: "#C24642",
+                    titleFontColor: "#C24642",
+                    //suffix: "%"
+                },
+
+                toolTip: {
+                    shared: true
+                },
+                legend: {
+                    cursor: "pointer",
+                    itemclick: toggleDataSeries
+                },
+
+                data: dataa6
+
+            });
+            chart.render();
+        }
+        //Error code
+        function OneClick (station,modelName,Date) {
+            //var station = ex.dataSeries.name;
+            //var modelName = ex.chart.options.title.text.split(':')[1].trim()
+            //var thisDate = ex.dataPoint.x
+            //var month = thisDate.getMonth() + 1
+            //var Date = thisDate.getFullYear() + "/" + month + "/" + thisDate.getDate()
+
+            debugger
+            var data = new FormData
+            data.append('dateTime', Date)
+            data.append('station', station)
+            data.append('ModelName', modelName)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/ShowChartErrorCodeByPCName',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (Data_res) {
+                    $('#modalAction').modal("hide")
+                    $('#tblEx').removeClass('showView').addClass('hideView');
+                    $('#header_choose').removeClass('showView').addClass('hideView');
+                  //  $('#ShowChartByPcname').removeClass('hideView').addClass('showView');
+                    debugger
+                    var d = Data_res
+                    var lstError = Data_res.lstModelName[0].lstError
+                    $(".panel-body").empty()
+
+                    html(Date, station, modelName)
+                    var table = '<div style="height: auto;" class="row justify-content-center mb-5 tableFixHead ">' +
+                                    '<table class="responsive-table" id="tblinPageChart">' +
+                                       ` @Html.Partial("~/Views/TopErrorByStation/TopErrorByStationPartial.cshtml", Model)` +
+                                    '</table>' +
+                                '</div>'
+
+                    $(".panel-body").append(table)
+                    //them
+                    var chartdetail_2 = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 116px;  margin-top: -62px; width: 200px;" id="ChartDetaillByPc_2" onclick="ShowChartSummaryPcName_Back('${station}','${modelName}','${Date}')">Chart Summary PC</button> </div>`
+                    $(".panel-body").append(chartdetail_2)
+                    //
+                    var chartdetailByError = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 335px;  margin-top: -62px; width: 200px;" id="ChartDetaillByError" onclick="ClickShowChartSummaryErrorCode_Back('${station}','${modelName}','${Date}')">Chart Summary By ER</button> </div>`
+                    $(".panel-body").append(chartdetailByError)
+
+
+                    lstError.forEach(function (errorchart) {
+                        drawChartByErrorCode(errorchart.ERROR_CODE, errorchart.DataPCName)
+                    })
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+            })
+        }
+
+        //=====draw chart by Error Summary=======
+        function ChartSummaryFailtByErrorCode(ErrorCode, data) {
+            $(".panel-body").append('<div id="' + (ErrorCode) + '"' + ' style="height: 370px; max-width: 920px; margin: 20px auto;"></div>');
+
+            var gecolor = genRandomColor()
+            var SummaryDataByErr = []
+            var Data = {
+                type: "line",
+                showInLegend: true,
+                name: ErrorCode,
+                markerType: "square",
+                color: gecolor,
+            }
+            Data.dataPoints = []
+            debugger
+           data.forEach(function (lstHour) {
+                var itemData = {}
+                itemData.x = lstHour.WorkSection
+                itemData.y = lstHour.FirstFailER
+                itemData.indexLabel = (lstHour.FirstFailER).toString() + " fail"
+                Data.dataPoints.push(itemData)
+
+            })
+            SummaryDataByErr.push(Data)
+
+            //===
+
+            var chart = new CanvasJS.Chart(ErrorCode, {
+                exportEnabled: true,
+                animationEnabled: true,
+                title: {
+                    text: "Error Code: " + ErrorCode
+                },
+                axisY: {
+                    title: "Chart Summary One day",
+                    lineColor: "#C24642",
+                    tickColor: "#C24642",
+                    labelFontColor: "#C24642",
+                    titleFontColor: "#C24642",
+                    //suffix: "%"
+                },
+
+                toolTip: {
+                    shared: true
+                },
+                legend: {
+                    cursor: "pointer",
+                    itemclick: toggleDataSeries
+                },
+
+                data: SummaryDataByErr
+
+            });
+            chart.render();
+        }
+
+        function ClickShowChartSummaryErrorCode(ex) {
+            debugger
+            var station = ex.dataSeries.name;
+            var modelName = ex.chart.options.title.text.split(':')[1].trim()
+            var thisDate = ex.dataPoint.x
+            var month = thisDate.getMonth() + 1
+            var Date = thisDate.getFullYear() + "/" + month + "/" + thisDate.getDate()
+
+            //=====
+            var data = new FormData
+            data.append('dateTime', Date)
+            data.append('station', station)
+            data.append('ModelName', modelName)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/ShowChartSummaryByErrorCode',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (Data_res) {
+                    debugger
+                    $('#modalAction').modal("hide")
+                    $('#tblEx').removeClass('showView').addClass('hideView');
+                    $('#header_choose').removeClass('showView').addClass('hideView');
+                    $('#ShowChartByPcname').removeClass('hideView').addClass('showView');
+                    debugger
+                    var d = Data_res
+                    //=================================================
+                    //var lstError = Data_res.lstModelName[0].lstError[0].DataPCName
+                    //var lstPc = Data_res.lstModelName[0].lstPC
+                    var dataByError = Data_res.lstModel[0].lstErrorSummary
+
+                    $(".panel-body").empty()
+
+                    debugger
+                    var chartdetailByError = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 116px;  margin-top: -62px; width: 200px;" id="ChartDetaillByErrorCode" onclick="OneClick('${station}','${modelName}','${Date}')">Chart Detail By Er</button> </div>`
+                    $(".panel-body").append(chartdetailByError)
+
+
+
+                    dataByError.forEach(function (ER) {
+                        ChartSummaryFailtByErrorCode(ER.ErrorCode, ER.dataErrorSum)
+
+                    })
+                    //===============================
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+            })
+        }
+        //=========================page
+
+        function ClickShowChartSummaryErrorCodeNewPage(station, modelName, Date) {
+            debugger
+            var data = new FormData
+            data.append('dateTime', Date)
+            data.append('station', station)
+            data.append('ModelName', modelName)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/ShowChartSummaryByErrorCode',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (Data_res) {
+                    debugger
+                    $('#modalAction').modal("hide")
+                    $('#tblEx').removeClass('showView').addClass('hideView');
+                    $('#header_choose').removeClass('showView').addClass('hideView');
+                    $('#ShowChartByPcname').removeClass('hideView').addClass('showView');
+                    debugger
+                    var d = Data_res
+                    //=================================================
+                    //var lstError = Data_res.lstModelName[0].lstError[0].DataPCName
+                    //var lstPc = Data_res.lstModelName[0].lstPC
+                    var dataByError = Data_res.lstModel[0].lstErrorSummary
+
+                    $(".panel-body").empty()
+
+                    html(Date, station, modelName)
+                    var table = '<div style="height: auto;" class="row justify-content-center mb-5 tableFixHead ">' +
+                                    '<table class="responsive-table" id="tblinPageChart">' +
+                                       ` @Html.Partial("~/Views/TopErrorByStation/TopErrorByStationPartial.cshtml", Model)` +
+                                    '</table>' +
+                                '</div>'
+                    $(".panel-body").append(table)
+
+                    debugger
+                    //them test
+                    var chartdetail_2 = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 116px;  margin-top: -62px; width: 200px;" id="ChartDetaillByPc_2" onclick="ShowChartSummaryPcName_Back('${station}','${modelName}','${Date}')">Chart Summary PC</button> </div>`
+                    $(".panel-body").append(chartdetail_2)
+                    //
+                    var chartdetailByError = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 335px;  margin-top: -62px; width: 200px;" id="ChartDetaillByErrorCode" onclick="OneClick('${station}','${modelName}','${Date}')">Chart Detail By Er</button> </div>`
+                    $(".panel-body").append(chartdetailByError)
+                    dataByError.forEach(function (ER) {
+                        ChartSummaryFailtByErrorCode(ER.ErrorCode, ER.dataErrorSum)
+
+                    })
+                    //===============================
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+            })
+        }
+
+        ///===============================
+
+
+        function ClickShowChartSummaryErrorCode_Back(station, modelName, Date) {
+
+            var data = new FormData
+            data.append('dateTime', Date)
+            data.append('station', station)
+            data.append('ModelName', modelName)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/ShowChartSummaryByErrorCode',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (Data_res) {
+                    debugger
+                    $('#modalAction').modal("hide")
+                    $('#tblEx').removeClass('showView').addClass('hideView');
+                    $('#header_choose').removeClass('showView').addClass('hideView');
+                    $('#ShowChartByPcname').removeClass('hideView').addClass('showView');
+                    debugger
+                    var d = Data_res
+                    var dataByError = Data_res.lstModel[0].lstErrorSummary
+                    $(".panel-body").empty()
+
+                    html(Date, station, modelName)
+                    var table = '<div style="height: auto;" class="row justify-content-center mb-5 tableFixHead ">' +
+                                '<table class="responsive-table" id="tblinPageChart">' +
+                                   ` @Html.Partial("~/Views/TopErrorByStation/TopErrorByStationPartial.cshtml", Model)` +
+                                '</table>' +
+                             '</div>'
+
+                    $(".panel-body").append(table)
+
+                    debugger
+                    //them test
+                    var chartdetail_2 = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 116px;  margin-top: -62px; width: 200px;" id="ChartDetaillByPc_2" onclick="ShowChartSummaryPcName_Back('${station}','${modelName}','${Date}')">Chart Summary PC</button> </div>`
+                    $(".panel-body").append(chartdetail_2)
+                    //
+                    var chartdetailByError = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 335px;  margin-top: -62px; width: 200px;" id="ChartDetaillByErrorCode" onclick="OneClick('${station}','${modelName}','${Date}')">Chart Detail By ER</button> </div>`
+                    $(".panel-body").append(chartdetailByError)
+                    dataByError.forEach(function (ER) {
+                        ChartSummaryFailtByErrorCode(ER.ErrorCode, ER.dataErrorSum)
+                    })
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+            })
+        }
+
+
+        //=======draw chart by PC Name=============
+        function drawChartByPCName(PCName, data) {
+            $(".panel-body").append('<div id="' + (PCName) + '"' + ' style="height: 370px; max-width: 920px; margin: 20px auto;"></div>');
+            var lstdataPc = data
+
+            var getdataPc = []
+            lstdataPc.forEach(function (lstPc) {
+                var gecolor = genRandomColor()
+                lstPc.ErrorCode
+                var itemObj = {
+                    type: "line",
+                    showInLegend: true,
+                    name: lstPc.ErrorCode,
+                    markerType: "square",
+                    color: gecolor,
+                }
+                itemObj.dataPoints = []
+
+                lstPc.lstdataErrorByPc.forEach(function (dataByError) {
+                    var dataERHour = {}
+                    dataERHour.x = dataByError.WorkSection
+                    dataERHour.y = dataByError.SumTestFailER
+                    dataERHour.indexLabel = (dataByError.SumTestFailER).toString() + " fail"
+                    itemObj.dataPoints.push(dataERHour)
+                })
+                getdataPc.push(itemObj)
+            })
+
+            var chart = new CanvasJS.Chart(PCName, {
+                exportEnabled: true,
+                animationEnabled: true,
+                title: {
+                    text: "Computer Name: " + PCName
+                },
+                axisY: {
+                    title: "Computer",
+                    lineColor: "#C24642",
+                    tickColor: "#C24642",
+                    labelFontColor: "#C24642",
+                    titleFontColor: "#C24642",
+                    //suffix: "%"
+                },
+
+                toolTip: {
+                    shared: true
+                },
+                legend: {
+                    cursor: "pointer",
+                    itemclick: toggleDataSeries
+                },
+
+                data: getdataPc
+
+            });
+            chart.render();
+        }
+        //pc
+        function DBClick(station, modelName, Date) {
+            debugger
+            var data = new FormData
+            data.append('dateTime', Date)
+            data.append('station', station)
+            data.append('ModelName', modelName)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/ShowChartByPCName',
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (Data_res) {
+                    debugger
+                    $('#modalAction').modal("hide")
+                    $('#tblEx').removeClass('showView').addClass('hideView');//header_choose
+                    $('#header_choose').removeClass('showView').addClass('hideView');
+                    $('#ShowChartByPcname').removeClass('hideView').addClass('showView');
+
+
+                    debugger
+                    var d = Data_res
+                    //=================================================
+                    //var lstError = Data_res.lstModelName[0].lstError[0].DataPCName
+                    debugger
+                    //var lstError = Data_res.lstModelName[0].lstError
+                    var lstPc = Data_res.lstModelName[0].lstPC
+                    $(".panel-body").empty()
+
+                    html(Date, station, modelName)
+                    var table = '<div style="height: auto;" class="row justify-content-center mb-5 tableFixHead ">' +
+                                '<table class="responsive-table" id="tblinPageChart">' +
+                                   ` @Html.Partial("~/Views/TopErrorByStation/TopErrorByStationPartial.cshtml", Model)` +
+                                '</table>' +
+                             '</div>'
+
+                    $(".panel-body").append(table)
+
+                    var chartdetail_2 = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 116px;  margin-top: -62px; width: 200px;" id="ChartDetaillByPc_2" onclick="ShowChartSummaryPcName_Back('${station}','${modelName}','${Date}')">Chart Summary PC</button> </div>`
+                    $(".panel-body").append(chartdetail_2)
+                    //them
+                    var chartdetail_er = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 352px;  margin-top: -61px; width: 200px;" id="ChartDetaillByErPage" onclick="ClickShowChartSummaryErrorCodeNewPage('${station}','${modelName}','${Date}')">Chart Summary Er</button> </div>`
+                    $(".panel-body").append(chartdetail_er)
+
+                    lstPc.forEach(function (pc) {
+                        drawChartByPCName(pc.PCName, pc.lstErrorCodeByPc)
+
+                    })
+                    //===============================
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+            })
+        }
+
+        //=chart summary by pc name
+        function ChartSummaryFailtByPCName(PCName, data) {
+            //var chartdetail= '<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px;" id="ChartDetaillByPc" onclick="showWiew()">Chart Detail PC</button> </div>'
+            //$(".panel-body").append(chartdetail)
+
+            $(".panel-body").append('<div id="' + (PCName) + '"' + ' style="height: 370px; max-width: 920px; margin: 20px auto;"></div>');
+
+            var gecolor = genRandomColor()
+            var Summarydata = []
+            var Data = {
+                type: "line",
+                showInLegend: true,
+                name: PCName,
+                markerType: "square",
+                color: gecolor,
+            }
+            debugger
+            Data.dataPoints = []
+            data.forEach(function (dataPc) {
+                dataPc.PCName
+                var itemHour = {}
+                itemHour.x = dataPc.WorkSection
+                itemHour.y = dataPc.SumTestFailER
+                itemHour.indexLabel = (dataPc.SumTestFailER).toString() + " fail"
+                Data.dataPoints.push(itemHour)
+            })
+            Summarydata.push(Data)
+
+            var chart = new CanvasJS.Chart(PCName, {
+                exportEnabled: true,
+                animationEnabled: true,
+                title: {
+                    text: "Computer Name: " + PCName
+                },
+                axisY: {
+                    title: "Computer",
+                    lineColor: "#C24642",
+                    tickColor: "#C24642",
+                    labelFontColor: "#C24642",
+                    titleFontColor: "#C24642",
+                    //suffix: "%"
+                },
+
+                toolTip: {
+                    shared: true
+                },
+                legend: {
+                    cursor: "pointer",
+                    itemclick: toggleDataSeries
+                },
+
+                data: Summarydata
+
+            });
+            chart.render();
+        }
+
+
+        function ClickShowChartSummaryPcName(ex) {
+            debugger
+            var station = ex.dataSeries.name;
+            var modelName = ex.chart.options.title.text.split(':')[1].trim()
+            var thisDate = ex.dataPoint.x
+            var month = thisDate.getMonth() + 1
+            var Date = thisDate.getFullYear() + "/" + month + "/" + thisDate.getDate()
+            //=====
+            var data = new FormData
+            data.append('dateTime', Date)
+            data.append('station', station)
+            data.append('ModelName', modelName)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/ShowChartSummaryFailByPCName',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (Data_res) {
+                    debugger
+                    $('#modalAction').modal("hide")
+                    $('#tblEx').removeClass('showView').addClass('hideView');
+                    $('#header_choose').removeClass('showView').addClass('hideView');
+                    $('#ShowChartByPcname').removeClass('hideView').addClass('showView');
+
+
+                    debugger
+                    var d = Data_res
+                    //var lstPc = Data_res.lstModelName[0].lstPC
+                    var lstPc = Data_res.summaryChart[0].lstModelName[0].lstPC
+                    var datainchart = Data_res.dataViewInChart[0];
+
+                    $(".panel-body").empty()
+
+                    html(Date, station, modelName)
+                    var table = '<div style="height:auto;" class="row justify-content-center mb-5 tableFixHead ">' +
+                                '<table class="responsive-table" id="tblinPageChart">'+
+                                   ` @Html.Partial("~/Views/TopErrorByStation/TopErrorByStationPartial.cshtml", Model)`+
+                                '</table>'+
+                             '</div>'
+
+                    $(".panel-body").append(table)
+
+
+                    var chartdetail = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 116px;  margin-top: -62px; width: 200px;" id="ChartDetaillByPc" onclick="DBClick('${station}','${modelName}','${Date}')">Chart Detail PC</button> </div>`
+                    $(".panel-body").append(chartdetail)
+
+                    var chartdetail_er = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 352px;  margin-top: -61px; width: 200px;" id="ChartDetaillByErPage" onclick="ClickShowChartSummaryErrorCodeNewPage('${station}','${modelName}','${Date}')">Chart Summary Er</button> </div>`
+                    $(".panel-body").append(chartdetail_er)
+
+                    lstPc.forEach(function (pc) {
+                        ChartSummaryFailtByPCName(pc.PCName, pc.lstDataPc)
+
+                    })
+                    //===============================
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+            })
+        }
+
+
+        function html(Date, station, modelName) {
+
+            $("#loading_result").show();
+            toastr["success"]("Loading Data", "Loading")
+            $("#animation_loading").css("opacity", "0.5");
+
+            debugger
+            var data = new FormData
+            data.append('date', Date)
+            data.append('Group_name', station)
+            data.append('Model_name', modelName)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/ViewDataInChart',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (res) {
+                    debugger
+                    //$('#tblEx').html(res)tblinPageChart
+                    $('#tblinPageChart').html(res)
+                    loadFixedHeader()
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+            })
+        }
+
+        function ShowChartSummaryPcName_Back(station, modelName, Date) {
+            debugger
+            //var station = ex.dataSeries.name;
+            //var modelName = ex.chart.options.title.text.split(':')[1].trim()
+            //var thisDate = ex.dataPoint.x
+            //var month = thisDate.getMonth() + 1
+            //var Date = thisDate.getFullYear() + "/" + month + "/" + thisDate.getDate()
+            var data = new FormData
+            data.append('dateTime', Date)
+            data.append('station', station)
+            data.append('ModelName', modelName)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/ShowChartSummaryFailByPCName',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (Data_res) {
+                    debugger
+                    $('#modalAction').modal("hide")
+                    $('#tblEx').removeClass('showView').addClass('hideView');
+                    $('#header_choose').removeClass('showView').addClass('hideView');
+                    $('#ShowChartByPcname').removeClass('hideView').addClass('showView');
+                    debugger
+                    var d = Data_res
+                   // var lstPc = Data_res.lstModelName[0].lstPC
+                    var lstPc = Data_res.summaryChart[0].lstModelName[0].lstPC
+                    $(".panel-body").empty()
+
+                    html(Date, station, modelName)
+                    var table = '<div style="height: auto;" class="row justify-content-center mb-5 tableFixHead ">' +
+                                '<table class="responsive-table" id="tblinPageChart">' +
+                                   ` @Html.Partial("~/Views/TopErrorByStation/TopErrorByStationPartial.cshtml", Model)` +
+                                '</table>' +
+                             '</div>'
+
+                    $(".panel-body").append(table)
+
+                    debugger
+                    var chartdetail = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 116px;  margin-top: -62px; width: 200px;" id="ChartDetaillByPc" onclick="DBClick('${station}','${modelName}','${Date}')">Chart Detail PC</button> </div>`
+                    $(".panel-body").append(chartdetail)
+
+                    //them
+                    var chartdetailByError = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;  position: absolute; left: 335px;  margin-top: -62px; width: 200px;" id="ChartDetaillByError" onclick="ClickShowChartSummaryErrorCode_Back('${station}','${modelName}','${Date}')">Chart Summary By ER</button> </div>`
+                    $(".panel-body").append(chartdetailByError)
+                    //var chartdetail = `<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; padding: 8px;  border-radius: 8px;" id="ChartDetaillByPc" onclick="DBClick('${station}','${modelName}','${Date}')">Chart Detail PC</button> </div>`
+                    //$("#lineBtn").append(chartdetail)
+
+                    lstPc.forEach(function (pc) {
+                        ChartSummaryFailtByPCName(pc.PCName, pc.lstDataPc)
+
+                    })
+                    //===============================
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+            })
+        }
+
+        //========================== chart Main ===================
+
+        function addSymbols(e) {
+            var suffixes = ["", "K", "M", "B"];
+            var order = Math.max(Math.floor(Math.log(e.value) / Math.log(1000)), 0);
+
+            if (order > suffixes.length - 1)
+                order = suffixes.length - 1;
+
+            var suffix = suffixes[order];
+            return CanvasJS.formatNumber(e.value / Math.pow(1000, order)) + suffix;
+        }
+
+        function toggleDataSeries(e) {
+            if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                e.dataSeries.visible = false;
+            } else {
+                e.dataSeries.visible = true;
+            }
+            e.chart.render();
+        }
+
+        function ShowChartByModel(station, modelName)
+        {
+            var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+            var SDate = date.substring(6, 10) + date.substring(0, 2) + date.substring(3, 5)
+            $('#modelName_Chart').val(modelName)
+            $('#stationChart').val(station)
+            debugger
+            var data = new FormData
+            data.append('StationName', station)
+            data.append('ModelName', modelName)
+            data.append('DataTime', SDate)
+            debugger
+            $.ajax({
+                type: 'post',
+                url: '/ChartSummary7Day/showChartByModelOneStation',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (res) {
+                    debugger
+                    var a = res;
+                    //=============all chart
+                    var data = [];
+                   
+
+                    //==== start chart column
+                    var gecolor = genRandomColor()
+
+                    var itemObj = {
+                        type: "stackedColumn",
+                        color: gecolor,//#369EAD
+                        showInLegend: true,
+                        axisYIndex: 1,
+                        click: ClickShowChartSummaryPcName//ClickShowChartSummaryErrorCode// ClickShowChartSummaryPcName// function (ex) { debugger}//ClickShowChartSummaryPcName,  //DBClick
+                    }
+                    itemObj.dataPoints = []
+
+                    a.lstDataChartByDayAndNight.forEach(function (e) {
+                        debugger
+                        var item = {}
+                        var s = e.WORK_DATE
+                        item.x = new Date(s.substring(0, 4), (new Number(s.substring(4, 6)) - 1).toString(), s.substring(6, 8))   //s.WORK_DATE.toDate()         //s.WORK_DATE.toDate()   //prototype.toDate
+                        item.y =e.INPUT 
+                        item.indexLabel = (e.INPUT).toString()
+                        item.z = e.RR_s
+                        item.g = e.FIRST_FAIL
+                        item.h = e.SUM_FAIL
+                        item.k = e.SUM_RE_FAIL
+                        item.er = e.YR_s
+                        itemObj.dataPoints.push(item)
+                       
+                    })
+                    itemObj.name = station//e.GroupName
+                    //
+
+
+                    var gecolor = genRandomColor()
+                    var itemObj2 = {
+                        type: "stackedColumn",
+                        color: gecolor,//#369EAD
+                        showInLegend: true,
+                        axisYIndex: 1,
+                        //click: ClickShowChartSummaryPcName
+                    }
+                    itemObj2.dataPoints = []
+
+                    a.lstDataChartByDayAndNight.forEach(function (e) {
+                        debugger
+                        var item = {}
+                        var s = e.WORK_DATE
+                        item.x = new Date(s.substring(0, 4), (new Number(s.substring(4, 6)) - 1).toString(), s.substring(6, 8))   //
+                        item.y = e.FIRST_FAIL
+                       // item.indexLabel = (e.FIRST_FAIL).toString()
+                        item.z = e.INPUT
+                        item.g = e.FIRST_FAIL
+                        item.h = e.SUM_FAIL
+                        item.k = e.SUM_RE_FAIL
+
+                        itemObj2.dataPoints.push(item)
+                    })
+                    itemObj2.name = "Fist fail"//station//e.GroupName
+
+
+
+                    var gecolor = genRandomColor()
+                    var itemObj3 = {
+                        type: "stackedColumn",
+                        color: gecolor,//#369EAD
+                        showInLegend: true,
+                        axisYIndex: 1,
+                        //click: ClickShowChartSummaryPcName
+                    }
+                    itemObj3.dataPoints = []
+
+                    a.lstDataChartByDayAndNight.forEach(function (e) {
+                        debugger
+                        var item = {}
+                        var s = e.WORK_DATE
+                        item.x = new Date(s.substring(0, 4), (new Number(s.substring(4, 6)) - 1).toString(), s.substring(6, 8))   //
+                        item.y = e.SUM_FAIL
+                       // item.indexLabel = (e.SUM_FAIL).toString()
+                        item.z = e.INPUT
+                        item.g = e.FIRST_FAIL
+                        item.h = e.SUM_FAIL
+                        item.k = e.SUM_RE_FAIL
+
+                        itemObj3.dataPoints.push(item)
+                    })
+                    itemObj3.name ="Fail" // station//e.GroupName
+
+                    //==== end chart column
+                    //==== chart line
+                    var gecolor = genRandomColor()
+                    var itemObj1 = {
+                        type: "line",
+                        color: gecolor,//#369EAD
+                        showInLegend: true,
+                        axisYIndex: 1,
+                       // click: ClickShowChartSummaryPcName
+
+                    }
+                    itemObj1.dataPoints = []
+
+                    a.lstDataChartByDayAndNight.forEach(function (e) {
+                        debugger
+                        var item = {}
+                        var s = e.WORK_DATE
+                        item.x = new Date(s.substring(0, 4), (new Number(s.substring(4, 6)) - 1).toString(), s.substring(6, 8))   //
+                        item.y = e.RR_s * 100
+                        item.indexLabel = (e.RR_s).toString() + "%"
+                        item.z = e.INPUT
+                        item.g = e.FIRST_FAIL
+                        item.h = e.SUM_FAIL
+                        item.k = e.SUM_RE_FAIL
+
+                        itemObj1.dataPoints.push(item)
+                    })
+                    itemObj1.name = "RR"//station//e.GroupName
+
+                    var gecolor = genRandomColor()
+                    var itemObj11 = {
+                        type: "line",
+                        color: gecolor,//#369EAD
+                        showInLegend: true,
+                        axisYIndex: 1,                     
+                    }
+                    itemObj11.dataPoints = []
+
+                    a.lstDataChartByDayAndNight.forEach(function (e) {
+                        debugger
+                        var item = {}
+                        var s = e.WORK_DATE
+                        item.x = new Date(s.substring(0, 4), (new Number(s.substring(4, 6)) - 1).toString(), s.substring(6, 8))   //
+                        item.y = (100-e.YR_s) * 1000
+                        // item.indexLabel = (e.YR_s).toString() + "%"
+                        item.z = e.INPUT
+                        item.g = e.FIRST_FAIL
+                        item.h = e.SUM_FAIL
+                        item.k = e.SUM_RE_FAIL
+
+                        itemObj11.dataPoints.push(item)
+                    })
+                    itemObj11.name = "YR"//station//e.GroupName
+                    //====== end chart line 
+
+
+                  
+
+                 
+                  
+                    data.push(itemObj)                                   
+                    data.push(itemObj2)
+                    data.push(itemObj3)
+                    data.push(itemObj1)
+                    data.push(itemObj11)
+
+
+                    setTimeout(function () {
+                        var chart = new CanvasJS.Chart("chartContainer", {
+                            exportEnabled: true,
+                            animationEnabled: true,
+                            theme: "light2",
+                            title: {
+                                text: "Model Name: " + modelName//res.lisDataByModel[0].MODEL_NAME
+                            },
+                            axisY: {
+                                title: "Retest Rate",
+                                lineColor: "#C24642",
+                                tickColor: "#C24642",
+                                labelFontColor: "#C24642",
+                                titleFontColor: "#C24642",
+                                suffix: "%"
+                            },
+                            toolTip: {
+                                shared: true,
+                                contentFormatter: function (e) {
+                                    var date = e.entries[0].dataPoint.x
+                                    var sDate = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDate()
+                                    var content = "Date:" + sDate + "<br/>" + "RR:" + e.entries[0].dataPoint.z + "</br>" + "defect rate:" + (100 - e.entries[0].dataPoint.er).toFixed(2)+ "<br/>" + "YR:" + e.entries[0].dataPoint.er + "</br>" + "InPut:" + e.entries[0].dataPoint.y + "<br/>" + "FirstFail:" + e.entries[0].dataPoint.g + "</br>" + "Fail:" + e.entries[0].dataPoint.h + "<br/>" + "ReFail:" + e.entries[0].dataPoint.k;
+                                    return content
+                                }
+                            },
+                            legend: {
+                                cursor: "pointer",
+                                itemclick: toggleDataSeries
+                            },
+                            data: data
+                        });
+                            chart.render();
+
+                     
+
+
+                        //
+
+                        //var chart = new CanvasJS.Chart("chartContainer", {
+                        //    animationEnabled: true,
+                        //    theme: "light2",
+                        //    title: {
+                        //        text: "Monthly Sales Data"
+                        //    },
+                        //    axisX: {
+                        //        valueFormatString: "MMM"
+                        //    },
+                        //    axisY: {
+                        //        prefix: "$",
+                        //        labelFormatter: addSymbols
+                        //    },
+                        //    toolTip: {
+                        //        shared: true
+                        //    },
+                        //    legend: {
+                        //        cursor: "pointer",
+                        //        itemclick: toggleDataSeries
+                        //    },
+
+
+
+                        //    data: [
+                        //    {
+                        //        type: "stackedColumn",
+                        //        name: "Actual Sales",
+                        //        showInLegend: true,
+                        //        xValueFormatString: "MMMM YYYY",
+                        //        yValueFormatString: "$#,##0",
+                        //        dataPoints: [
+                        //            { x: new Date(2016, 0), y: 20000 },
+                        //            { x: new Date(2016, 1), y: 30000 },
+                        //            { x: new Date(2016, 2), y: 25000 },
+                        //            { x: new Date(2016, 3), y: 70000, indexLabel: "High Renewals" },
+                        //            { x: new Date(2016, 4), y: 50000 },
+                        //            { x: new Date(2016, 5), y: 35000 },
+                        //            { x: new Date(2016, 6), y: 30000 },
+                        //            { x: new Date(2016, 7), y: 43000 },
+                        //            { x: new Date(2016, 8), y: 35000 },
+                        //            { x: new Date(2016, 9), y: 30000 },
+                        //            { x: new Date(2016, 10), y: 40000 },
+                        //            { x: new Date(2016, 11), y: 50000 }
+                        //        ]
+                        //    },
+                        //    {
+                        //        type: "stackedColumn",
+                        //        name: "Actual Sales",
+                        //        showInLegend: true,
+                        //        xValueFormatString: "MMMM YYYY",
+                        //        yValueFormatString: "$#,##0",
+                        //        dataPoints: [
+                        //            { x: new Date(2016, 0), y: 20000 },
+                        //            { x: new Date(2016, 1), y: 30000 },
+                        //            { x: new Date(2016, 2), y: 25000 },
+                        //            { x: new Date(2016, 3), y: 70000, indexLabel: "High Renewals" },
+                        //            { x: new Date(2016, 4), y: 50000 },
+                        //            { x: new Date(2016, 5), y: 35000 },
+                        //            { x: new Date(2016, 6), y: 30000 },
+                        //            { x: new Date(2016, 7), y: 43000 },
+                        //            { x: new Date(2016, 8), y: 35000 },
+                        //            { x: new Date(2016, 9), y: 30000 },
+                        //            { x: new Date(2016, 10), y: 40000 },
+                        //            { x: new Date(2016, 11), y: 50000 }
+                        //        ]
+                        //    },
+                        //    {
+                        //        type: "stackedColumn",
+                        //        name: "Actual Sales",
+                        //        showInLegend: true,
+                        //        xValueFormatString: "MMMM YYYY",
+                        //        yValueFormatString: "$#,##0",
+                        //        dataPoints: [
+                        //            { x: new Date(2016, 0), y: 20000 },
+                        //            { x: new Date(2016, 1), y: 30000 },
+                        //            { x: new Date(2016, 2), y: 25000 },
+                        //            { x: new Date(2016, 3), y: 70000, indexLabel: "High Renewals" },
+                        //            { x: new Date(2016, 4), y: 50000 },
+                        //            { x: new Date(2016, 5), y: 35000 },
+                        //            { x: new Date(2016, 6), y: 30000 },
+                        //            { x: new Date(2016, 7), y: 43000 },
+                        //            { x: new Date(2016, 8), y: 35000 },
+                        //            { x: new Date(2016, 9), y: 30000 },
+                        //            { x: new Date(2016, 10), y: 40000 },
+                        //            { x: new Date(2016, 11), y: 50000 }
+                        //        ]
+                        //    },
+                        //    {
+                        //        type: "line",
+                        //        name: "Expected Sales",
+                        //        showInLegend: true,
+                        //        yValueFormatString: "$#,##0",
+                        //        dataPoints: [
+                        //            { x: new Date(2016, 0), y: 40000 },
+                        //            { x: new Date(2016, 1), y: 42000 },
+                        //            { x: new Date(2016, 2), y: 45000 },
+                        //            { x: new Date(2016, 3), y: 45000 },
+                        //            { x: new Date(2016, 4), y: 47000 },
+                        //            { x: new Date(2016, 5), y: 43000 },
+                        //            { x: new Date(2016, 6), y: 42000 },
+                        //            { x: new Date(2016, 7), y: 43000 },
+                        //            { x: new Date(2016, 8), y: 41000 },
+                        //            { x: new Date(2016, 9), y: 45000 },
+                        //            { x: new Date(2016, 10), y: 42000 },
+                        //            { x: new Date(2016, 11), y: 50000 }
+                        //        ]
+                        //    },
+                        //    {
+                        //        type: "line",
+                        //        name: "Expected Sales",
+                        //        showInLegend: true,
+                        //        yValueFormatString: "$#,##0",
+                        //        dataPoints: [
+                        //            { x: new Date(2016, 0), y: 50000 },
+                        //            { x: new Date(2016, 1), y: 52000 },
+                        //            { x: new Date(2016, 2), y: 55000 },
+                        //            { x: new Date(2016, 3), y: 55000 },
+                        //            { x: new Date(2016, 4), y: 57000 },
+                        //            { x: new Date(2016, 5), y: 53000 },
+                        //            { x: new Date(2016, 6), y: 52000 },
+                        //            { x: new Date(2016, 7), y: 53000 },
+                        //            { x: new Date(2016, 8), y: 51000 },
+                        //            { x: new Date(2016, 9), y: 55000 },
+                        //            { x: new Date(2016, 10), y: 42000 },
+                        //            { x: new Date(2016, 11), y: 50000 }
+                        //        ]
+                        //    },
+                        //    {
+                        //        type: "area",
+                        //        name: "Profit",
+                        //        markerBorderColor: "white",
+                        //        markerBorderThickness: 2,
+                        //        showInLegend: true,
+                        //        yValueFormatString: "$#,##0",
+                        //        dataPoints: [
+                        //            { x: new Date(2016, 0), y: 5000 },
+                        //            { x: new Date(2016, 1), y: 7000 },
+                        //            { x: new Date(2016, 2), y: 6000 },
+                        //            { x: new Date(2016, 3), y: 30000 },
+                        //            { x: new Date(2016, 4), y: 20000 },
+                        //            { x: new Date(2016, 5), y: 15000 },
+                        //            { x: new Date(2016, 6), y: 13000 },
+                        //            { x: new Date(2016, 7), y: 20000 },
+                        //            { x: new Date(2016, 8), y: 15000 },
+                        //            { x: new Date(2016, 9), y: 10000 },
+                        //            { x: new Date(2016, 10), y: 19000 },
+                        //            { x: new Date(2016, 11), y: 22000 }
+                        //        ]
+                        //    }]
+                        //});
+                        //chart.render();
+
+                       
+                    }, 200)
+
+                    $('#modalAction').modal("show")
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+            })
+        }
+
+
+        //====================chart one==============================
+        // draw chart by one Error Code
+
+        //============chart detail by one error Code===================
+        function drawOneChartDetailByError(ErrorCode, data) {
+            $(".panel-body").append('<div id="' + (ErrorCode+1) + '"' + ' style="height: 370px; max-width: 920px; margin: 20px auto;"></div>');
+            var lstError = data
+            var dataa6 = []
+            lstError.forEach(function (lstPC) {
+                var gecolor = genRandomColor()
+                lstPC.StattionName
+                var itemObj = {
+                    type: "line",
+                    showInLegend: true,
+                    name: lstPC.StattionName,
+                    markerType: "square",
+                    //xValueFormatString: "DD MMM, YYYY",
+                    color: gecolor,
+                }
+                itemObj.dataPoints = []
+
+                lstPC.dataHour.forEach(function (hour) {
+                    var Datahour = {}
+                    Datahour.x = hour.WORK_SECTION
+                    Datahour.y = hour.SUM_TEST_FAIL_ER
+                    // item.indexLabel = (s.lstDataBysation[0].RR_s).toString()+"%"
+                    Datahour.indexLabel = (hour.SUM_TEST_FAIL_ER).toString() + "fail"
+
+                    itemObj.dataPoints.push(Datahour)
+                })
+                dataa6.push(itemObj)
+            })
+
+            var chart = new CanvasJS.Chart((ErrorCode+1), {
+                exportEnabled: true,
+                animationEnabled: true,
+                title: {
+                    text: "Error Code: " + ErrorCode
+                },
+                axisY: {
+                    title: "Chart Detail One day",
+                    lineColor: "#C24642",
+                    tickColor: "#C24642",
+                    labelFontColor: "#C24642",
+                    titleFontColor: "#C24642",
+                    //suffix: "%"
+                },
+
+                toolTip: {
+                    shared: true
+                },
+                legend: {
+                    cursor: "pointer",
+                    itemclick: toggleDataSeries
+                },
+
+                data: dataa6
+
+            });
+            chart.render();
+        }
+
+        //================Chart Main One Error Code============
+
+        // draw chart 5 day by Error code
+
+        //function DrawOneChart(ErrorCode, dataOneChartOf5day) {
+        //    $(".panel-body").append('<div id="' + (ErrorCode+2) + '"' + ' style="height: 370px; max-width: 920px; margin: 20px auto;"></div>');//
+        //    var chart = new CanvasJS.Chart((ErrorCode + 2), {
+        //        exportEnabled: true,
+        //        animationEnabled: true,
+        //        title: {
+        //            text: "Error Code: " + ErrorCode
+        //        },
+        //        axisY: {
+        //            title: "Retest Rate",
+        //            lineColor: "#C24642",
+        //            tickColor: "#C24642",//"#C24642"
+        //            labelFontColor: "#C24642",
+        //            titleFontColor: "#C24642",
+        //            suffix: "%"
+        //        },
+        //        toolTip: {
+        //            shared: true
+        //        },
+        //        legend: {
+        //            cursor: "pointer",
+        //            itemclick: toggleDataSeries
+        //        },
+        //        data: dataOneChartOf5day
+        //    });
+        //    chart.render();
+        //}
+
+        function ChartErrorCode5Day(ErrorCode, data) {
+            $(".panel-body").append('<div id="' + (ErrorCode+2) + '"' + ' style="height: 370px; max-width: 920px; margin: 20px auto;"></div>');
+
+            var gecolor = genRandomColor()
+            var SummaryDataByErr = []
+            var Data = {
+                type: "line",
+                showInLegend: true,
+                name: ErrorCode,
+                markerType: "square",
+                color: gecolor,
+                xValueFormatString: "DD MMM, YYYY",
+            }
+            Data.dataPoints = []
+
+            data.forEach(function (dt) {
+                debugger
+                var itemData = {}
+                var y = dt.Date.substring(0, 4)
+                //var m = dt.Date.substring(4, 6)
+                var d = dt.Date.substring(6,8)
+                var m = (new Number(dt.Date.substring(4, 6)) - 1).toString()
+                itemData.x = new Date(y, m, d)
+                // itemData.y = dt.SUM_FAIL_ER
+                itemData.y = dt.SUM_TEST_FAIL_ER
+                itemData.indexLabel = (dt.SUM_TEST_FAIL_ER).toString() + " fail"
+
+                Data.dataPoints.push(itemData)
+
+            })
+            SummaryDataByErr.push(Data)
+
+            //===
+
+            var chart = new CanvasJS.Chart((ErrorCode+2), {
+                exportEnabled: true,
+                animationEnabled: true,
+                title: {
+                    text: "Error Code: " + ErrorCode
+                },
+                axisY: {
+                    title: "Chart 7 Day",
+                    lineColor: "#C24642",
+                    tickColor: "#C24642",
+                    labelFontColor: "#C24642",
+                    titleFontColor: "#C24642",
+                    //suffix: "%"
+                },
+
+                toolTip: {
+                    shared: true
+                },
+                legend: {
+                    cursor: "pointer",
+                    itemclick: toggleDataSeries
+                },
+
+                data: SummaryDataByErr
+
+            });
+            chart.render();
+        }
+
+        //
+
+        function ShowMainChartOneByError(station, modelName, ErrorCode) {
+            //$('#modelName_Chart').val(modelName)
+            //$('#stationChart').val(station)
+            //$('#OneErrorCode').val(ErrorCode)
+
+            //date
+            var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+            var SDate = date.substring(6, 10) + date.substring(0, 2) + date.substring(3, 5)
+            debugger
+            var data = new FormData
+            data.append('station', station)
+            data.append('ModelName', modelName)
+            data.append('ErrorCode', ErrorCode)
+            data.append('dateTime', SDate)
+
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/ShowChartSummaryByOneError',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (res) {
+                    debugger
+
+                    $('#tblEx').removeClass('showView').addClass('hideView');
+                    $('#header_choose').removeClass('showView').addClass('hideView');
+                    $('#ShowChartByPcname').removeClass('hideView').addClass('showView');
+                    $(".panel-body").empty()
+
+                    var btn = '<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; position: relative; top: -42px;left: -15px;" onclick="showWiewAndHideMes()">back to view</button></div>';
+                    $(".panel-body").append(btn)
+
+                    var mo = `<div class="row"><div class="col-lg-5"><div class="md-form form-sm"><label style="font-size: 24px;color: #3f8931;" class="active">Model Name:${modelName}</label></div></div><div class="col-lg-5"><div class="md-form form-sm"><label style="font-size: 24px;color: #3f8931;margin-left: -350px;" class="active">Station:${station}</label></div></div></div><hr/>`
+                    $(".panel-body").append(mo)
+                    //$(".panel-body").append('')
+                    //$(".panel-body").append('')
+
+                    var data = res.lstSummay[0].lstModel[0].lstErrorSummary[0].dataErrorSum
+                    ChartSummaryFailtByErrorCode(ErrorCode, data)
+
+                    var dataDetailOneErr = res.lstDetail[0].lstModelName[0].lstError[0].DataPCName
+                    drawOneChartDetailByError(ErrorCode, dataDetailOneErr)
+                    //draw chart 5 day by Error Code
+
+                   // var data5dayByError = res.lst5DayChartByEr[0].lstModel[0].lst5DayError[0].lisData5Day
+                    var data5dayByError = res.lstData7dayDayAndNight
+                    ChartErrorCode5Day(ErrorCode, data5dayByError)
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+        }
+
+
+        //================chart Detail by one Pc name=============
+        function drawChartDetailByOnePCName(PCName, data) {
+            $(".panel-body").append('<div id="' + (PCName+1) + '"' + ' style="height: 370px; max-width: 920px; margin: 20px auto;"></div>');
+            var lstdataPc = data
+
+            var getdataPc = []
+            lstdataPc.forEach(function (lstPc) {
+                var gecolor = genRandomColor()
+                lstPc.ErrorCode
+                var itemObj = {
+                    type: "line",
+                    showInLegend: true,
+                    name: lstPc.ErrorCode,
+                    markerType: "square",
+                    color: gecolor,
+                }
+                itemObj.dataPoints = []
+
+                lstPc.lstdataErrorByPc.forEach(function (dataByError) {
+                    var dataERHour = {}
+                    dataERHour.x = dataByError.WorkSection
+                    dataERHour.y = dataByError.SumTestFailER
+                    dataERHour.indexLabel = (dataByError.SumTestFailER).toString() + " fail"
+                    itemObj.dataPoints.push(dataERHour)
+                })
+                getdataPc.push(itemObj)
+            })
+
+            var chart = new CanvasJS.Chart((PCName+1), {
+                exportEnabled: true,
+                animationEnabled: true,
+                title: {
+                    text: "Computer Name: " + PCName
+                },
+                axisY: {
+                    title: "Computer",
+                    lineColor: "#C24642",
+                    tickColor: "#C24642",
+                    labelFontColor: "#C24642",
+                    titleFontColor: "#C24642",
+                    //suffix: "%"
+                },
+
+                toolTip: {
+                    shared: true
+                },
+                legend: {
+                    cursor: "pointer",
+                    itemclick: toggleDataSeries
+                },
+
+                data: getdataPc
+
+            });
+            chart.render();
+        }
+
+        //================Chart Main One PC Name===================
+        function ShowMainChartOneByPCName(station, modelName,PCName)
+        {
+            //date
+            var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+            var SDate = date.substring(6, 10) + date.substring(0, 2) + date.substring(3, 5)
+            debugger
+            var data = new FormData
+            data.append('station', station)
+            data.append('ModelName', modelName)
+            data.append('PCName', PCName)
+            data.append('dateTime', SDate)
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/ShowChartSummaryAndDetailByOnePCName',
+                data: data,
+                contentType: false,
+                processData: false,
+                success: function (res) {
+                    debugger
+
+                    $('#tblEx').removeClass('showView').addClass('hideView');
+                    $('#header_choose').removeClass('showView').addClass('hideView');
+                    $('#ShowChartByPcname').removeClass('hideView').addClass('showView');
+
+                    $(".panel-body").empty()
+
+                    var btn = '<div class="col-lg-1"><button class="btn-blue" style="padding:8px; border-radius:8px; position: relative; top: -42px;left: -15px;" onclick="showWiewAndHideMes()">back to view</button></div>';
+                    $(".panel-body").append(btn)
+                    var mo = `<div class="row"><div class="col-lg-5"><div class="md-form form-sm"><label style="font-size: 24px;color: #3f8931;" class="active">Model Name:${modelName}</label></div></div><div class="col-lg-5"><div class="md-form form-sm"><label style="font-size: 24px;color: #3f8931;margin-left: -350px;" class="active">Station:${station}</label></div></div></div><hr/>`
+                    $(".panel-body").append(mo)
+
+
+
+
+
+
+                    var data = res.lstSummaryByOnePc[0].lstModelName[0].lstPC[0].lstDataPc
+                    ChartSummaryFailtByPCName(PCName, data)
+
+
+                    //var dataDetailOneErr = res.lstDetail[0].lstModelName[0].lstError[0].DataPCName
+                    var DataDetail=res.lsDetailByOnePC[0].lstModelName[0].lstPC[0].lstErrorCodeByPc
+                    drawChartDetailByOnePCName(PCName, DataDetail)
+
+
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+        }
+
+
+
+
+
+
+
+
+
+    </script>
+
+}
+
+@section HandelSearch{
+    <script>
+
+
+    </script>
+}
+
+@section CkEditor{
+    <script>
+        var action;
+        ClassicEditor
+            .create(document.querySelector('#action'))
+            .then(editor => {
+
+                action = editor;
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    </script>
+}
+
+@section HandelAddData{
+    <script>
+        function addData(model, station, errorcode, workdate, PCName) {
+            debugger
+           // $('#Id').val(0)
+            var date = new Date()
+            var Hour = date.getHours()
+
+            Date.prototype.getWeek = function () {
+                var onejan = new Date(this.getFullYear(), 0, 1);
+                return Math.ceil((((this - onejan) / 86400000) + onejan.getDay() + 1) / 7)
+            }
+            var datew = new Date(date)
+            var week = datew.getWeek()
+
+
+            $('#Add_model').val(model)
+            $('#Add_station').val(station)
+            $('#Add_errCode').val(errorcode)
+            $('#Add_PCName').val(PCName)
+            var getDate = workdate.split(' ')[0]
+            $('#week').val(week)
+            $('#Add_workdate').val(getDate)
+            $('#Add_dueDate').val(getDate)
+            $('#Add_hour').val(Hour)
+            $('#Add_modelAction').modal("show")
+        }
+
+        function postFormData() {
+
+           // var id = $('#Id').val()
+
+            debugger
+            var model = $('#Add_model').val()
+            var owner = $('#Add_owner').val()
+            var dueDate = $('#Add_dueDate').val()
+            var station = $('#Add_station').val()
+            var action = $('#action').val()//action.getData()
+            var rootCause = $('#rootCause').val()
+            var errCode = $('#Add_errCode').val()
+            var PCName = $('#Add_PCName').val()
+            var workdate = $('#Add_workdate').val()
+
+           // var status = $('#status').val()
+            var status = $("#inputGroupSelectStatus").find(":selected").val()
+
+            var hour = $('#Add_hour').val()
+
+            var week = $('#week').val()
+            //var type = $('#Type').val()
+            var type = $("#inputGroupSelectType").find(":selected").val()
+            var problem = $('#ProblemDes').val()
+
+
+            var data = new FormData
+
+            //if (parseInt(id) > 0)
+            //{
+            //    data.append('Id', id)
+            //}
+
+            data.append('ModelName', model)
+            data.append('Owner', owner)
+            data.append('Duedate', dueDate)
+
+            data.append('Station', station)
+            data.append('Action', action)
+            data.append('RootCause', rootCause)
+            data.append('ErrorCode', errCode)
+            data.append('PCName', PCName)
+            data.append('Workdate', workdate)
+            data.append('Status', status)
+            data.append('Hour', hour)
+
+
+
+            data.append('Week', week)
+            data.append('Type', type)
+            data.append('ProblemDes', problem)
+
+          //  var ajax = '/TopErrorByStation/AddAction'
+
+            //if (parseInt(id) > 0)
+            //{
+            //    var ajax = '/TopErrorByStation/EditActionByStation'
+            //}
+
+            $("#loading_result").show();
+            $("#animation_loading").css("opacity", "0.5");
+            $.ajax({
+                type: 'post',
+                url: '/TopErrorByStation/AddAction',
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    debugger
+                    //$('#tblEx').html(res)
+                    // loadFixedHeader()
+                    toastr["success"]("Insert Success", "Success")
+                    $("#loading_result").hide();
+                    $('#Add_modelAction').modal("hide")
+                    $("#animation_loading").css("opacity", "1");
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                }
+
+            })
+
+
+        }
+
+
+
+        function EditData(model, station, errorcode, workdate)
+        {
+            var model = $('#Add_model').val()
+            var owner = $('#Add_owner').val()
+            var dueDate = $('#Add_dueDate').val()
+            var station = $('#Add_station').val()
+            var action = $('#action').val()
+            var rootCause = $('#rootCause').val()
+            var errCode = $('#Add_errCode').val()
+            var workdate = $('#Add_workdate').val()
+            var status = $('#status').val()
+            var hour = $('#Add_hour').val()
+            $('#Add_modelAction').modal("show")
+        }
+
+    </script>
+}
+
+@section ShowPcName{
+    <script>
+
+         function showAndHidePC()
+         {
+             var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+             var NowDate = $("#testday").data('daterangepicker').startDate._d;
+
+             var _nextDate = new Date()
+             _nextDate.setDate(NowDate.getDate() + 1)
+             var sNextDate = _nextDate.getMonth() + 1 + "/" + _nextDate.getDate() + "/" + _nextDate.getFullYear()
+             var option = document.getElementById("selectTop3").value
+             var groupName = document.getElementById("GroupName").value
+             var modelName = document.getElementById("modelName").value
+             var shift = $("#inputGroupSelect01").find(":selected").val()
+             var pcs = document.getElementById("PCSByStation").value
+             var fromHour = document.getElementById("FromHour").value;
+             var ToHour = document.getElementById("ToHour").value;
+             var optionLine = document.getElementById("LineChange").value
+             var statusPc = document.getElementById("StatusPcName").value;
+
+
+
+             $("#loading_result").show();
+             toastr["success"]("Loading Data", "Loading")
+             $("#animation_loading").css("opacity", "0.5");
+
+             debugger
+             var data = new FormData
+             data.append('Date', date)
+             data.append('Option', option)
+             data.append('group_name', groupName)
+             data.append('ModelName', modelName)
+             data.append('Shift', shift)
+             data.append('NextDate', sNextDate)
+             data.append('PCS', pcs)
+             data.append('fromHour', fromHour)
+             data.append('toHour', ToHour)
+             data.append('StatusLine', optionLine)
+             data.append('StatusPc', statusPc)
+
+             //$("#loading_result").show();
+             //$("#animation_loading").css("opacity", "0.5");
+             //toastr["success"]("Loading data11", "Loading")
+
+             $.ajax({
+                 type: 'post',
+                 url: '/TopErrorByStation/statusPcName',
+                 data: data,
+                 contentType: false,
+                 processData: false,
+                 success: function (res) {
+                     debugger
+                     $('#tblEx').html(res)
+                     $("#loading_result").hide();
+                     $("#animation_loading").css("opacity", "1");
+                 },
+                 error: function (err) {
+                     toastr["error"]("Not Success", "Erorr")
+                 }
+
+             })
+        }
+    </script>
+
+}
+
+
+
+
+<!--Modal: Contact form-->
+<div class="modal fade" id="Add_modelAction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog cascading-modal modal-lg" role="document">
+        <!--Content-->
+        <div class="modal-content">
+
+            <!--Header-->
+            <div class="modal-header light-blue darken-3 white-text">
+                <button type="button" class="close waves-effect waves-light" id="closeModelAction" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="title"><i class="fa fa-pencil"></i>Action ErrorCode</h4>
+            </div>
+            <!--Body-->
+            <div class="modal-body mb-0">
+                <div class="container">
+                    <input type="hidden" id="Id" />
+                    <div class="row">
+                        <!-- left -->
+                        <div class="col-lg-4">
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="Add_model" class="form-control" value="a">
+                                <label for="Add_model" class="active">Model Name</label>
+                            </div>
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input disabled type="text" id="Add_PCName" class="form-control" value="a">
+                                <label for="Add_PCName">PCName</label>
+                            </div>
+
+
+
+                        </div>
+                        <!-- mid -->
+                        <div class="col-lg-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="Add_station" class="form-control" value="a">
+                                <label for="Add_station" class="active">Station Name</label>
+                            </div>
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="Add_workdate" class="form-control" value="1999-11-11">
+                                <label for="Add_workdate" class="active">WorkDate</label>
+                            </div>
+                        </div>
+
+                        <!-- right -->
+                        <div class="col-lg-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-lock prefix active"></i>
+                                <input disabled type="text" id="Add_errCode" class="form-control" value="a">
+                                <label for="Add_errCode" class="active">ErrorCode</label>
+                            </div>
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input disabled type="text" id="week" class="form-control" value="a">
+                                <label for="week">Week</label>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-lg-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input disabled type="text" id="Add_hour" class="form-control" value="a">
+                                <label for="Add_hour">Hour</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input type="text" id="Add_dueDate" class="form-control" value="1999-11-11">
+                                <label for="Add_dueDate" class="active">DueDate</label>
+                            </div>
+                        </div>
+
+                        @*<div class="col-lg-4">
+                                <div class="md-form form-sm">
+                                    <i class="fa fa-envelope prefix "></i>
+                                    <input type="text" id="Type" class="form-control" value="a">
+                                    <label for="Type">Type</label>
+                                </div>
+                            </div>*@
+
+                        <div class="col-4">
+                            <div class="input-group" style="height:100%">
+                                <div class="input-group-prepend" style="height:40px">
+                                    <label style="margin-top:20px; height:40px;" class="input-group-text" for="inputGroupSelectStatus">Style</label>
+                                </div>
+                                <select class="custom-select" id="inputGroupSelectType" style="margin-top:20px; width: 205px; height: 40px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;">
+
+                                    <option id="Project" value="Project">Project</option>
+                                    <option selected id="TPG" value="TPG">TPG</option>
+                                    <option id="Other" value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <div class="row">
+
+
+                        <div class="col-4">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input type="text" id="Add_owner" class="form-control" placeholder="Owner">  @*value="a"*@
+                                <label for="Add_owner">Owner</label>
+                            </div>
+                        </div>
+
+                        @*<div class="col-4">
+                                <div class="md-form form-sm">
+                                    <i class="fa fa-envelope prefix "></i>
+                                    <input type="text" id="ProblemDes" class="form-control" value="a">
+                                    <label for="ProblemDes">Proplem</label>
+                                </div>
+                            </div>*@
+
+                        @*<div class="col-4">
+                                <div class="md-form form-sm">
+                                    <i class="fa fa-lock prefix"></i>
+                                    <input type="text" id="status" class="form-control"  placeholder="Status">
+                                    <label for="status">Status</label>
+                                </div>
+                            </div>*@
+
+                        <div class="col-4">
+                            <div class="input-group" style="height:100%">
+                                <div class="input-group-prepend" style="height:40px">
+                                    <label style="margin-top:20px; height:40px;" class="input-group-text" for="inputGroupSelectStatus">Status</label>
+                                </div>
+                                <select class="custom-select" id="inputGroupSelectStatus" style="margin-top:20px; width: 205px; height: 40px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;">
+
+                                    <option id="Done" value="Done">Done</option>
+                                    <option selected id="OnGoing" value="On Going">On Going</option>
+                                    <option id="Open" value="Open">Open</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+
+
+
+                    @* CK *@
+
+                    <div class="row">
+                        <div class="col-lg-11">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <input type="text" id="ProblemDes" class="form-control" placeholder="Proplem">  @*value="a"*@
+                                <label for="ProblemDes">Proplem</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-11">
+
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <textarea type="text" id="rootCause" class="form-control" style="resize: none;"></textarea>
+                                <label for="rootCause">Root Cause</label>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-11">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix "></i>
+                                <textarea type="text" id="action" class="form-control" style="resize: none;"></textarea>
+                                <label for="action">Action</label>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="text-center mt-1-half">
+                    <button class="btn btn-info mb-2" onclick="postFormData()">Send<i class="fa fa-send ml-1"></i></button>
+                </div>
+            </div>
+        </div>
+        <!--/.Content-->
+    </div>
+</div>
+
+
+<!--Modal: Contact form-->
+<div class="modal fade" id="modalAction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog cascading-modal modal-lg" role="document">
+        <!--Content-->
+        <div class="modal-content">
+
+            <!--Header-->
+            <div class="modal-header light-blue darken-3 white-text">
+                <button type="button" class="close waves-effect waves-light" id="closeModal" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="title"><i class="fa fa-pencil"></i>Chart model name</h4>
+            </div>
+            <!--Body-->
+            <div class="modal-body mb-0">
+                <input type="hidden" id="Id" />
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-5">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="modelName_Chart" class="form-control" value="a">
+                                <label for="modelName_Chart" class="active">Model Name</label>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="stationChart" class="form-control" value="a">
+                                <label for="stationChart" class="active">Station Name</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            @*<div class="panel panel-default">
+                                <div style="height: 370px; width: 725px; margin: 0px auto;" class="panel-body">*@
+                            <div id="chartContainer" style="height: 370px; max-width: 920px;"></div>
+                            @*</div>
+                                </div>*@
+                        </div>
+                    </div>
+
+
+
+
+                </div>
+
+
+            </div>
+        </div>
+        <!--/.Content-->
+    </div>
+</div>
+
+
+
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">Retest Rate by Station Error Code</h1>
+            </div><!-- /.col -->
+
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+
+<section class="content">
+    <div id="animation_loading">
+        <div class="container-fluid">
+            <div id="header_choose">
+                <div style="height:50px;" class="row mb-2">
+
+                    <div class="col-1" style="padding-left: 0;">
+
+                        <input style=" width:150px;height:39px; font-weight:bold; color:black; font-size:16px;" class="form-control" id="testday" type="text" name="testday" placeholder="Enter test day">
+                    </div>
+
+                    @*<div class="col-3" style="padding-left: 0;">
+                            <input id="daterange" class="form-control" type="text" name="daterange" />
+                        </div>*@
+
+                    <div class="col-2" style="width: 165px;position:relative; left: 24px;">
+                        <select onchange="OnChange()" style="width: 205px; height: 31px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;" id="GroupName" class="selectpicker" data-hide-disabled="true" data-live-search="true" placeholder="Search..">
+                            <option>All Station</option>
+                            @foreach (var name in Model.listData)
+                            {
+                                <option style="font-weight:bold; color:black; font-size:16px;">@(name.GroupName)</option>
+                            }
+
+                        </select>
+                    </div>
+
+                    <div class="col-2">
+                        <select style=" width:205px; height: 31px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;" id="modelName" class="selectpicker" data-hide-disabled="true" data-live-search="true" placeholder="Search..">
+                            <option style=" height: 40px;" selected>All Model</option>
+                            @if (ViewBag.lstmodel != null && ViewBag.lstmodel.Count > 0)
+                            {
+                                foreach (var item in ViewBag.lstmodel)
+                                {
+                                    <option style="font-weight:bold; color:black; font-size:16px;">@(item)</option>
+
+                                }
+                            }
+
+                            @* <option>@(model.ModelName)</option>*@
+
+                        </select>
+                    </div>
+
+                    <div class="col-2">
+                        <div class="input-group" style="height:100%">
+                            <div class="input-group-prepend" style="height:40px">
+                                <label class="input-group-text" for="inputGroupSelect01">Shift</label>
+                            </div>
+                            <select class="custom-select" id="inputGroupSelect01" style="width: 205px; height: 40px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;">
+                                <option>Choose...</option>
+                                <option id="AllDay" value="0">All Day</option>
+                                <option selected id="day" value="1">Day shift</option>
+                                <option id="night" value="2">Night shift</option>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-2">
+                        <div class="input-group" style="height:100%">
+                            <div class="input-group-prepend" style="height:40px">
+                                <label class="input-group-text" for="selectTop3">Data</label>
+                            </div>
+                            <select class="custom-select" id="selectTop3" onchange="getTop3()" style="width: 205px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                <option>Choose...</option>
+                                <option selected value="all">All Data</option>
+                                <option value="top3Er">Top 3 Error code</option>
+                                <option value="top3Mo">Top 3 Model Name</option>
+                                <option value="topMoER">Top 3 ModelName && Errocode</option>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-2">
+                        <div class="input-group" style="height:100%;width:60%">
+                            <div class="input-group-prepend" style="height:100%">
+                                <label style="height:40px;" class="input-group-text" for="selectTop3">Input</label>
+                                @*<input style="width: 150px; height: 40px;border-radius: 5px;" id="PCSByStation" type="text" value="100" />*@
+                                <select id="PCSByStation" class="custom-select" style="width: 150px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                    <option selected>0</option>
+                                    <option>10</option>
+                                    @for (var ip = 0; ip < 1000; ip += 50)
+                                    {
+                                        <option>@ip</option>
+                                    }
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <div class="col-1" style="padding-left: 0; margin-top:2px;">
+                        <button onclick="postdata()" type="button" style=" border-radius:5px;margin-top: -3px; margin-left: -52px;" class="btn btn-success">Filters</button>@*margin-top: -3px; margin-left: -52px;*@
+
+                    </div>
+                    @*<div lass="col-2">*@
+                    <div style="width:100px; height:100px;z-index:20 ;position:absolute;margin:100px 500px;" id="loading_result" class="lv-bars lv-mid lg"></div>
+                    @*</div>*@
+
+
+
+                </div>
+
+                <div style="margin-top:20px;" class="row mb-2">
+                    <div class="col-2">
+                        <div class="input-group" style="height:100%;width:60%">
+                            <div class="input-group-prepend" style="height:100%">
+                                <label style="height:40px;" class="input-group-text" for="selectTop3">From Hour</label>
+                                <select id="FromHour" class="custom-select" style="width: 150px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                    <option selected value="30">Choose...</option>
+
+                                    @for (var FHour = 0; FHour < 23; FHour++)
+                                    {
+                                        <option value="@FHour">@FHour:30h</option>
+                                    }
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-2">
+                        <div class="input-group" style="height:100%;width:60%">
+                            <div class="input-group-prepend" style="height:100%">
+                                <label style="height:40px;" class="input-group-text" for="selectTop3">To Hour</label>
+                                <select id="ToHour" class="custom-select" style="width: 150px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                    <option selected value="30">Choose...</option>
+                                    @for (var THour = 0; THour < 24; THour++)
+                                    {
+                                        <option value="@THour">@THour:30h</option>
+                                    }
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-2">
+                        <div class="input-group" style="height:100%">
+                            <div class="input-group-prepend" style="height:40px">
+                                <label class="input-group-text" for="selectTop3">Line</label>
+                            </div>
+                            <select class="custom-select" id="LineChange" onchange="LineChange()" style="width: 205px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                <option>Choose...</option>
+                                <option selected value="allLine">All Line</option>
+                                <option value="LineChange">Line Change</option>
+                                <option value="NoChange">Line No Change</option>
+
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-2">
+                        <select style=" width:205px; height: 31px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;" id="modelNameFind" class="selectpicker" data-hide-disabled="true" data-live-search="true" placeholder="Search..">
+                            <option style=" height: 40px;" selected>Choose Model</option>
+                            @if (ViewBag.lstmodelInTwoMonth != null && ViewBag.lstmodelInTwoMonth.Count > 0)
+                            {
+                                foreach (var item in ViewBag.lstmodelInTwoMonth)
+                                {
+                                    <option style="font-weight:bold; color:black; font-size:16px;">@(item.MODEL_NAME)</option>
+
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-1" style="padding-left: 0; margin-top:2px;">
+                        <button onclick="postdataToFind()" type="button" style=" border-radius:5px;margin-top: -3px; margin-left: -52px;" class="btn btn-success">Filters</button>@*margin-top: -3px; margin-left: -52px;*@
+                    </div>
+
+                    @*<div class="col-1" style="padding-left: 0; margin-top:2px;">
+                            <button onclick="ShowPcName()" type="button" style=" border-radius:5px;margin-top: -3px; margin-left: -52px;" class="btn btn-blue">Show Pc</button>
+                        </div>*@
+
+                    <div class="col-1">
+                        <div class="input-group" style="height:100%;">
+                            <div class="input-group-prepend" style="height:40px;margin-left:-70px;">
+                                <label class="input-group-text" for="StatusPcName">PCName</label>
+                            </div>
+                            <select onchange="showAndHidePC()" class="custom-select" id="StatusPcName" style="width: 205px; height: 40px;border-radius: 5px;font-weight:bold; color:black; font-size:16px;">
+                                <option selected value="">Choose</option>
+                                <option value="ShowPc">Show Pc</option>
+                                <option value="HidePc">Hide Pc</option>
+                            </select>
+                        </div>
+                    </div>
+
+
+
+                    <div class="col-4">
+                        <button id="btnFA" onclick="exportData('tblEx')" style="width: 14em; margin-top: 12px;" class="btn btn-primary">
+                            <i class="fas fa-file-download"></i>
+                            Download
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="row justify-content-center mb-5 hideView" id="ShowChartByPcname">
+                <div id="lineBtn" class="row">
+                    <div class="col-lg-1">
+                        <button class="btn-blue" style="padding:8px; border-radius:8px;" id="backTable" onclick="showWiew()">back to view</button>
+                    </div>
+
+                </div>
+                <div>
+                    <div id="ChartbyPcNameShowhide" class="col-lg-12">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div class="col-lg-1">
+                                    <button class="btn-blue" style="padding:8px; border-radius:8px;" id="backTable11111" onclick="showWiew()">back to view sadasdsa</button>
+                                </div>
+                                @*<div id="chartContainer" style="height: 370px; max-width: 920px; margin: 0px auto;"></div>*@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="row justify-content-center mb-5 tableFixHead ">
+                <table class="responsive-table" id="tblEx">
+                    @Html.Partial("~/Views/TopErrorByStation/TopErrorByStationPartial.cshtml", Model)          @*TopErrorByStationHidePCtPartial  TopErrorByStationPartial*@
+                </table>
+            </div>
+
+
+
+
+
+
+        </div>
+    </div>
+</section>

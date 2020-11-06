@@ -1,0 +1,386 @@
+﻿@model List<Report.Entity.LstDataLine>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+   .flex-container {
+  display: flex;
+  flex-direction: column;
+  background-color: DodgerBlue;
+  float: left;
+  height:500px;
+  
+}
+
+
+.flex-container{
+width:130px;
+height:auto;
+}
+.flex-container > div {
+  background-color: #f1f1f1;
+  width: 100px;
+ 
+  margin: 10px;
+  text-align: center;
+  line-height: 75px;
+  font-size: 30px;
+}
+
+    /*button.btn.btn-secondary.waves-effect.waves-light {
+        padding: 0rem 0rem;
+    }
+
+    .btn-secondary {
+        color: #fff;
+        
+    }
+
+    .btn {
+        color: #fff;
+        padding: 0rem 0rem;
+    }*/
+</style>
+
+
+@section EvenShowTooltip{
+    <script>
+
+       
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+
+
+        $(document).ready(function () {
+            $(".HoverTooltip").hover()
+        })
+
+
+        function loadToolTip() {
+            $(".HoverTooltip").hover(function () {   //hover
+
+
+                //var info = $(this).val();
+                //var data = $(this).getAttribute('value') js
+                var data = $(this).attr('value')  //jquery
+                var text = $(this).text();
+                var h = $(this).html()
+                $(this).tooltip({
+                    title: data,
+                    html: true,
+                    animation: true,
+                    placement: "top",
+                    trigger: "hover"
+                });
+            });
+        }
+        loadToolTip()
+
+        function setColor_green() {
+
+            var x = document.getElementsByClassName("changeColor3")
+            x.forEach(e=> {
+
+                e.style.backgroundColor = e.style.backgroundColor == "green" ? "#40fb40" : "green"
+
+            })
+
+        }
+        var myvar = setInterval(setColor_green, 2000)
+
+        function setColor_red() {
+
+            var x = document.getElementsByClassName("changeColor1")
+            x.forEach(e=> {
+
+                e.style.backgroundColor = e.style.backgroundColor == "#f14444" ? "#f51212" : "#f14444"
+
+            })
+
+        }
+        var myvar = setInterval(setColor_red, 2000)
+
+
+        //document.body.style.zoom = "80%"
+
+
+    </script>
+
+}
+
+
+@section dateRangeSingle{
+    <script>
+
+        $(function () {
+            $('input[id="testday"]').daterangepicker(
+                {
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    minYear: 1901,
+                    maxYear: parseInt(moment().format("YYYY"), 10),
+                }
+            );
+
+        });
+
+
+
+        $(function () {
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'left'
+            }, function (start, end, label) {
+                debugger
+                console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                var deta = end._d.getDate() - start._d.getDate()
+                var monthStart = start._d.getMonth()
+                var monthEnd = end._d.getMonth()
+                var d=(end-start)/86400000
+
+                 if (d>7) {
+                    toastr["error"]("Mời chọn số ngày nhỏ hơn 7", "Erorr")
+                }
+
+
+            });
+
+        });
+
+
+
+
+    </script>
+
+}
+
+
+
+
+@section HandelControl{
+    <script>
+
+        $(function () {
+            $("#loading_result").hide();
+
+        });
+
+        function postdata() {
+            debugger
+
+            var date = $("#testday").data('daterangepicker').startDate.format('MM/DD/YYYY');
+            var SDate = date.substring(6, 10) + date.substring(0, 2) + date.substring(3, 5)
+            var shift = $("#inputGroupSelect01").find(":selected").val()
+
+            var formHour = $("#FromHour").val()
+            var ToHour=$("#ToHour").val()
+           // var optionDay = $("#optionByDay").find(":selected").val()
+           // var model = $("#modelName").find(":selected").val()
+
+            if (shift.includes('Choose')) {
+                toastr["error"]("Mời chọn ca làm việc", "Erorr")
+                return
+            }
+
+            $("#loading_result").show();
+
+            $("#animation_loading").css("opacity", "0.5");
+
+            var data = new FormData
+            data.append('thisDate', SDate)
+            data.append('Shift', shift)
+
+            data.append('FromHour', formHour)
+            data.append('ToHour', ToHour)
+
+
+            $.ajax({
+                type: 'post',
+                url: '/Abnormal/DataFilter',
+
+                data: data,
+                contentType: false,
+                processData: false,
+
+                success: function (res) {
+                    $('#tblEx').html(res)
+                    loadFixedHeader()
+
+                    $("#loading_result").hide();
+                    $("#animation_loading").css("opacity", "1");
+
+                },
+                error: function (err) {
+                    toastr["error"]("Not Success", "Erorr")
+                }
+
+            })
+
+        }
+
+
+
+    </script>
+
+}
+
+
+<!--draw chart by model name-->
+<div class="modal fade" id="modalAction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog cascading-modal modal-lg" role="document">
+        <!--Content-->
+        <div style="width:1200px;" class="modal-content">
+
+            <!--Header-->
+            <div class="modal-header light-blue darken-3 white-text">
+                <button type="button" class="close waves-effect waves-light" id="closeModal" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="title"><i class="fa fa-pencil"></i>Chart model name</h4>
+            </div>
+            <!--Body-->
+            <div class="modal-body mb-0">
+                <input type="hidden" id="Id" />
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="md-form form-sm">
+                                <i class="fa fa-envelope prefix active"></i>
+                                <input disabled type="text" id="modelName_Chart" class="form-control" value="a">
+                                <label for="modelName_Chart" class="active">Model Name</label>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+
+                            <div id="chartContainer" style="height: 370px; max-width: 1040px;"></div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--/.Content-->
+    </div>
+</div>
+
+
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">Map factory 1st Floor</h1>
+            </div><!-- /.col -->
+
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+
+<section class="content">
+    <div id="animation_loading">
+        <div class="container-fluid">
+            <div style="margin-bottom:20px;" class="row col-mb-2">
+                <div class="col-1" style="padding-left: 0;">
+                    <input style=" width:150px;height:40px; font-weight:bold; color:black; font-size:16px;" class="form-control" id="testday" type="text" name="testday" placeholder="Enter test day">
+                </div>
+
+
+
+
+                <div class="col-md-2">
+                    <div class="input-group" style="height:100%;width:60%">
+                        <div class="input-group-prepend" style="height:100%">
+                            <label style="height:40px;" class="input-group-text" for="selectTop3">From Hour</label>
+                            <select id="FromHour" class="custom-select" style="width: 150px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                <option selected value="30">Choose...</option>
+
+                                @for (var FHour = 0; FHour < 23; FHour++)
+                                {
+                                    <option value="@FHour">@FHour:30h</option>
+                                }
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="input-group" style="height:100%;width:60%">
+                        <div class="input-group-prepend" style="height:100%">
+                            <label style="height:40px;" class="input-group-text" for="selectTop3">To Hour</label>
+                            <select id="ToHour" class="custom-select" style="width: 150px; height: 40px;border-radius: 5px; font-weight:bold; color:black; font-size:16px;">
+                                <option selected value="30">Choose...</option>
+                                @for (var THour = 0; THour < 24; THour++)
+                                {
+                                    <option value="@THour">@THour:30h</option>
+                                }
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <div class="col-md-1" style="padding-left: 0; margin-top:2px;">
+                    <button id="sdkfkd" onclick="postdata()" type="button" style=" border-radius:5px;height:38px;padding: 13px;" class="btn btn-success">Filters</button>
+
+                </div>
+
+
+
+                @*<div lass="col-2">*@
+                <div style="width:100px; height:100px;z-index:20 ;position:absolute;margin:100px 500px;" id="loading_result" class="lv-bars lv-mid lg"></div>
+                @*</div>*@
+
+
+
+            </div>
+
+            <hr style="margin-bottom:20px;" />
+
+
+
+            <div style="position:relative;" class="row justify-content-center col-mb-5 tableFixHead ">
+
+                <div style="position:absolute ;width:100%; height:100%; position:relative;top:10px; ">
+                    <img style="width:1700px;" src="~/wwwroot/images/FloorSt2B06.jpg" />
+                </div>
+
+                <div style="overflow:hidden; width:1200px; height:600px;right: 472px; position: absolute ; top: 150px; z-index: 10;">
+                    <table class="responsive-table" id="tblEx">
+                        @Html.Partial("~/Views/MapfactorySt2B06/MapFactoryFloor2stPartial.cshtml", Model)
+                    </table>
+                </div>
+
+            </div>
+
+            @*<div style="position:absolute;" class="row justify-content-center mb-5 tableFixHead ">
+
+                 <div style="width:100%; height:100%; position:relative;top:10px; ">
+                     <img style="width:1700px;" src="~/wwwroot/images/Floor1st.jpg" />
+                 </div>
+
+                 <div style="right: 451px; top: 250px; z-index: 10;" >
+                     <table class="responsive-table" id="tblEx">
+                         @Html.Partial("~/Views/FactoryMap/FactoryMapPartial.cshtml", Model)
+                     </table>
+                 </div>
+
+                </div>*@
+
+
+        </div>
+    </div>
+</section>
+
+
+

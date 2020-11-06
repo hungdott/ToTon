@@ -1,0 +1,74 @@
+﻿@model  List<Report.Entity.lstAllData>
+@using Newtonsoft.Json
+
+<thead>
+    <tr>
+        <th>Station</th>
+        <th>Model Name</th>     
+        <th>Work Date</th>
+        <th>Error</th>
+        <th>Hour</th>
+        <th>DueDate</th>
+        <th>Proplem</th>
+        <th>RootCause</th>
+        <th>Action</th>
+        <th>Status</th>
+       
+        <th>Fail</th>
+        <th>Owner</th>
+    </tr>
+</thead>
+
+<tbody>
+
+
+    @foreach(var item in Model)
+    {
+        var countAction = 0;
+        foreach(var it in Model)
+        {
+            foreach(var cc in it.lstdatabyWorkDate)
+            {
+              
+                countAction += cc.lstDataActionbyDay.Count();
+            }
+        }
+
+        <tr>
+            <td rowspan="@(countAction+item.lstdatabyWorkDate.Count()+1)">@item.Station</td>
+            <td rowspan="@(countAction+item.lstdatabyWorkDate.Count()+1)">@item.ModelName</td>
+
+            @foreach(var data in item.lstdatabyWorkDate)
+            {
+                <tr>
+                    <td rowspan="@(data.lstDataActionbyDay.Count()+1)">@data.WorkDate</td>
+                    <td rowspan="@(data.lstDataActionbyDay.Count()+1)">@data.ErrorCode</td>
+                    @foreach(var dataActon in data.lstDataActionbyDay)
+                    {
+                        <tr>
+                            <td>@(dataActon.WorkSection) Hour</td>
+                            <td>@dataActon.DueDate</td>
+                            <td>@dataActon.Proplem</td>
+                            <td>@dataActon.RootCause</td>
+                            <td style="text-align:left;">@(Html.Raw(dataActon.Action))</td>
+                            <td>@dataActon.Status</td>
+                           
+                            <td>@(dataActon.FirstFail == -5 ? "NA": dataActon.FirstFail.ToString() )</td>
+                            <td>@dataActon.owner</td>
+                          
+                         </tr>
+                    }
+                </tr>
+            }
+        </tr>
+
+         }
+
+</tbody>
+
+
+
+
+
+
+

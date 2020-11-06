@@ -1,0 +1,174 @@
+﻿@model  List<Report.EntityModel.ActionErrorCode>
+
+<thead>
+    <tr>
+        <th width="7%">
+           <span style="float:left">week</span>
+                      
+            <div class="input-group" style="float:right;width:50px;">
+                <select onchange="onchangeWeek()" class="selectpicker form-control" id="exl_week" title="Select Model Name" data-hide-disabled="true" multiple data-actions-box="false" data-live-search="true">
+                    @foreach (var item in Model.GroupBy(x => x.Week).Select(k => k.Key))
+                    {
+                        <option>@item</option>
+                    }
+                </select>              
+            </div>
+        </th>
+        <th>Due Date</th>
+        <th>Hour</th>
+
+        @*<th style="width:10%;"><select multiple class="selectpicker form-control" id="number-multiple" data-container="body" data-live-search="true" title="Select a number" data-hide-disabled="true" data-actions-box="true" data-virtual-scroll="false"></select></th>*@
+
+
+        @*<th>Begin </th>*@
+      
+       
+
+        <th style="width:7%;">
+            <div style="display:inline">
+                <span style="float:left">Type</span>
+                <div  class="input-group" style="width:50px; float:right">
+                    <select onchange="onchang_Week_Type()" multiple class="selectpicker form-control" id="exl_week_type" data-container="body" data-live-search="true" title="Select a number" data-hide-disabled="true" data-actions-box="true" data-virtual-scroll="false">
+                        @foreach (var item in Model.GroupBy(x => x.Type).Select(k => k.Key))
+                        {
+                            <option>@item</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </th>
+
+        <th style="width:10%;">
+            <div style="display:inline">
+                <span style="float:left;">Model Name</span>
+                <div class="input-group" style="width:50px;float:right;">
+                    <select onchange="onchang_Week_Type_Model()" multiple class="selectpicker form-control" id="ex_Week_type_model" data-container="body" data-live-search="true" title="Select a number" data-hide-disabled="true" data-actions-box="true" data-virtual-scroll="false">
+                        @foreach (var item in Model.GroupBy(x => x.ModelName).Select(k => k.Key))
+                        {
+                            <option>@item</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </th>
+       
+
+
+        <th style="width:8%;">
+            <div style="display:inline">
+                <span style="float:left;">Station</span>
+                <div class="input-group" style="width:50px;float:right;">
+                    <select onchange="onchang_week_Type_Model_Group()" multiple class="selectpicker form-control" id="ex_Week_type_model_group" data-container="body" data-live-search="true" title="Select a number" data-hide-disabled="true" data-actions-box="true" data-virtual-scroll="false">
+                        @foreach (var item in Model.GroupBy(x => x.Station).Select(k => k.Key))
+                        {
+                            <option>@item</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </th>
+
+        <th>Error</th>
+        @*<th>PCName</th>*@
+        <th>ProblemDes</th>
+        <th>Rootcause </th>
+        <th style="width:7%">
+            <span style="float:left">Status</span>
+            <div  class="input-group" style="width:50px; float:right;">
+                <select onchange="onchang_Week_Type_Model_Group_Sataus()" multiple class="selectpicker form-control" id="ex_Week_type_model_status" data-container="body" data-live-search="true" title="Select a number" data-hide-disabled="true" data-actions-box="true" data-virtual-scroll="false">
+                    @foreach (var item in Model.GroupBy(x => x.Status).Select(k => k.Key))
+                    {
+                        <option>@item</option>
+                    }
+                </select>
+            </div>
+        </th>
+        <th>Action</th>
+        <th>Owner</th>
+        <th>Edit</th>
+
+
+
+    </tr>
+</thead>
+
+
+<tbody id="tblBody">
+
+    @foreach (var item in Model)
+    {
+
+        var date = item.Duedate.ToString().Substring(0, 10);
+        //var sdate = date.Substring(0, 4) + date.Substring(4, 2)+date.Substring(6,2);
+        //d.toISOString().substring(0, 10)
+        <tr>
+
+            <td>@(item.Week)</td>
+            <td>@(item.Duedate.ToString().Substring(0, 10))</td>
+            <td>@(item.WorkSection)</td>
+            @*<td>@(item.Begin)</td>*@
+           
+            <td>@(item.Type)</td>
+            <td>@(item.ModelName)</td>
+            <td>@(item.Station)</td>
+            <td>@(item.ErrorCode)</td>
+            @*<td>@(item.PCname)</td>*@
+            <td>@(item.ProblemDes)</td>
+            <td>@(item.RootCause)</td>
+            <td>@(item.Status)</td>
+            <td style="cursor:pointer; overflow:hidden; text-align:left; width:15%;" class="HoverTooltip" value="@(item.Action)">
+                 <lable style="overflow:hidden">@(Html.Raw(item.Action))</lable>
+            </td>
+
+            <td>@(item.Owner)</td>
+            @*class="btnEdit btn btn-success" style=""*@
+            <td>
+                <button onclick="EditData('@item.Id','@item.ModelName','@item.Station','@item.ErrorCode','@item.PCname','@date','@item.Duedate','@item.WorkSection','@item.Owner','@item.Status','@item.Type','@item.ProblemDes','@item.Action','@item.RootCause')"><i class="far fa-edit"></i></button>
+            </td>
+
+        </tr>
+    }
+
+</tbody>
+
+<script>
+    function loadFixedHeader() {
+        var $th = $('.tableFixHead').find('thead th')
+        $('.tableFixHead').on('scroll', function () {
+            $th.css('transform', 'translateY(' + this.scrollTop + 'px)');
+        });
+    }
+
+    loadFixedHeader()
+
+    
+
+     
+        $(".HoverTooltip").hover(function () {
+            var info = $(this).val();
+            var a = $(this).text();
+            var h = $(this).html()
+            $(this).tooltip({
+                title: "<code>"+h+"</code>",
+                html: true,
+                animation: true,
+                placement: "top",
+                trigger: "hover"
+            });
+        });
+        //"<h1><strong>HTML</strong> inside <code>the</code> <em>tooltip</em></h1>" +
+
+    
+    
+</script>
+@section JSSelectPartial{
+    <script src="~/wwwroot/dist/js/bootstrap-select.min.js"></script>
+    <script src="~/wwwroot/dist/js/bootstrap-select.js"></script>
+}
+
+
+
+
+
+
+
